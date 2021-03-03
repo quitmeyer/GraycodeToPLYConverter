@@ -1,0 +1,7 @@
+﻿pointcloud.obj : error LNK2005: "public: __thiscall DataExporter::DataExporter(class cv::Mat,class cv::Mat,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >,enum FileFormat)" (??0DataExporter@@QAE@VMat@cv@@0V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4FileFormat@@@Z) already defined in DataExporter.obj
+pointcloud.obj : error LNK2005: "public: __thiscall DataExporter::~DataExporter(void)" (??1DataExporter@@QAE@XZ) already defined in DataExporter.obj
+pointcloud.obj : error LNK2005: "float __cdecl ReverseFloat(float)" (?ReverseFloat@@YAMM@Z) already defined in DataExporter.obj
+pointcloud.obj : error LNK2005: "public: void __thiscall DataExporter::exportToFile(void)" (?exportToFile@DataExporter@@QAEXXZ) already defined in DataExporter.obj
+pointcloud.obj : error LNK2005: "bool __cdecl isLittleEndian(void)" (?isLittleEndian@@YA_NXZ) already defined in DataExporter.obj
+pointcloud.obj : error LNK2005: "char const * * enum2str" (?enum2str@@3PAPBDA) already defined in DataExporter.obj
+opencv_highgui450d.lib(opencv_highgui450d.dll) : fatal error LNK1112: module machine type 'x64' conflicts with target machine type 'x86'

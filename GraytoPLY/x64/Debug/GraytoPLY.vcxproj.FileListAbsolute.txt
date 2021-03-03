@@ -1,0 +1,4 @@
+C:\Users\andre\Desktop\Glowcake Hoss\Cool New Pointcloud Generator\GraytoPLY\x64\Debug\GraytoPLY.exe
+C:\Users\andre\Desktop\Glowcake Hoss\Cool New Pointcloud Generator\GraytoPLY\x64\Debug\GraytoPLY.pdb
+C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\x64\Debug\GraytoPLY.exe
+C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\x64\Debug\GraytoPLY.pdb
