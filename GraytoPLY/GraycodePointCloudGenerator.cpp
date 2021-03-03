@@ -51,9 +51,10 @@ static bool readStringListCameraImages(const string& filename, vector<string>& l
 		return false;
 	}
 	FileNode n = fs.getFirstTopLevelNode();
+	n = fs["camA"];
 	if (n.type() != FileNode::SEQ)
 	{
-		cerr << "cam 1 images are not a sequence! FAIL" << endl;
+		cerr << "cam A images are not a sequence! FAIL" << endl;
 		return false;
 	}
 
@@ -63,10 +64,10 @@ static bool readStringListCameraImages(const string& filename, vector<string>& l
 		l.push_back((string)*it);
 	}
 
-	n = fs["cam2"];
+	n = fs["camB"];
 	if (n.type() != FileNode::SEQ)
 	{
-		cerr << "cam 2 images are not a sequence! FAIL" << endl;
+		cerr << "cam B images are not a sequence! FAIL" << endl;
 		return false;
 	}
 
@@ -243,9 +244,9 @@ int main(int argc, char** argv)
 	initUndistortRectifyMap(camAintrinsics, camAdistCoeffs, R1, P1, imagesSize, CV_32FC1, map1x, map1y);
 	initUndistortRectifyMap(camBintrinsics, camBdistCoeffs, R2, P2, imagesSize, CV_32FC1, map2x, map2y);
 
-	namedWindow("Show Loading Images", WINDOW_NORMAL);
+	namedWindow("Show Rectified Images", WINDOW_NORMAL);
 
-	resizeWindow("Show Loading Images", 600, 400);
+	resizeWindow("Show Rectified Images", 600, 400);
 
 	// Loading pattern images
 	for (size_t i = 0; i < numberOfPatternImages; i++)
@@ -263,10 +264,7 @@ int main(int argc, char** argv)
 		}
 		remap(captured_pattern[0][i], captured_pattern[0][i], map1x, map1y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
 		remap(captured_pattern[1][i], captured_pattern[1][i], map2x, map2y, INTER_NEAREST, BORDER_CONSTANT, Scalar()); 
-
-		
-
-		imshow("Show Loading Images", captured_pattern[1][i]);
+		imshow("Show Rectified Images", captured_pattern[1][i]);
 		waitKey(1);
 	}
 	cout << "done" << endl;
@@ -316,7 +314,10 @@ int main(int argc, char** argv)
 
 		// Show the result
 		//resize(cm_disp, cm_disp, Size(640 * 2, 480 * 2), 0, 0, INTER_LINEAR_EXACT);
+
+		//Shows the disparity map as a RECTIFIED image
 		imshow("cm disparity m", cm_disp);
+		waitKey(1);
 		imwrite(outputFolder + "/" + "cm disparity m" + ".png", cm_disp);
 
 
@@ -339,7 +340,7 @@ int main(int argc, char** argv)
 
 
 		imshow("threshold disp otsu", dst);
-
+		waitKey(1);
 		// Apply the mask to the point cloud
 		Mat pointcloud_tresh, color_tresh;
 		pointCloud.copyTo(pointcloud_tresh, thresholded_disp);
@@ -537,9 +538,172 @@ int main(int argc, char** argv)
 			namedWindow("Project Points Canon Cam image", WINDOW_NORMAL);
 			resizeWindow("Project Points Canon Cam image", 800, 800);
 			imshow("Project Points Canon Cam image", projIM);
-
+			waitKey(1);
 			imwrite(outputFolder + "/" + "Canon Cam Image"+ ".png", projIM);
 			
+		}
+
+
+		/*		//Try to reproject  Canonical Camera's points to examine calibration */
+
+		bool calcCamB = true;
+		if (calcCamB) {
+			cout << endl << " Calculating Cam B Camera Stuff " << endl;
+
+			Mat cameraMatrixB;
+			float aspectRatio = 16 / 9.0;
+			cameraMatrixB = Mat::eye(3, 3, CV_32FC1);
+			cameraMatrixB.at< float >(0, 0) = aspectRatio;
+
+			float d = sqrt(powf(wCanon, 2) + powf(hCanon, 2));
+			float f = (d / 2) * cos(diagnonalFOV / 2) / sin(diagnonalFOV / 2);  // old guess  1.732; // 1.732 = cotangent(1.0472/2) where 1.0472 is 60 degrees in radians)
+
+			
+
+			cout << "Camera Matrix " << "\n" << camBintrinsics << endl;
+
+			double repError1;
+
+			Size imageSizeP = Size(pointcloud_tresh.cols, pointcloud_tresh.rows);
+
+			Point projPixelB; //= new Point(0.0, 0.0);
+
+			std::vector<std::vector<cv::Vec2f>> processedImagePointsB;
+			vector<cv::Vec2f> imagePoints;
+
+			std::vector<std::vector<cv::Point3f>> processedobjectPointsP;
+			std::vector<cv::Point3f> objectPointsP;
+
+
+
+
+			float minDepth = 9999999999; //there has to be a better way to just have BIGGEST NUMBER
+			float maxDepth = 0;
+			float depth = 9;
+			const float* input = pointcloud_tresh.ptr<float>(0);
+			//Remember Points and Size go (x,y); (width,height) ,- Mat has (row,col).
+			for (int i = 0; i < pointcloud_tresh.rows; i++)
+			{
+				for (int j = 0; j < pointcloud_tresh.cols; j++)
+				{
+					bool error = graycode->getProjPixel(captured_pattern[0], j, i, projPixelB); //Get pixel based on view of first camera
+					if (error) {
+						// cout << endl << " Error Pixel no pattern here  i" << i <<"  j "<<j<< endl;
+
+					}
+					else // Pattern  was sucessfully detected here
+					{
+
+						// float x = input[pointcloud_tresh.step * j + i];
+						 //float y = input[pointcloud_tresh.step * j + i + 1];
+						 //float z = input[pointcloud_tresh.step * j + i + 2];
+
+
+
+						float x = pointcloud_tresh.at<Vec3f>(i, j)[0];
+						float y = pointcloud_tresh.at<Vec3f>(i, j)[1];
+						float z = pointcloud_tresh.at<Vec3f>(i, j)[2];
+						//  cout << endl << " almost Good Pixel at  i " << i <<"  j "<<j<< "  x " << x << "  y " << y << "  z " << z << endl;
+
+						depth = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
+						//Calculate min and max depth for the loop
+						if (depth > maxDepth && depth != 10000) maxDepth = depth;
+						if (depth < minDepth && depth != 10000) minDepth = depth;
+
+
+						if (x == 0 && y == 0 && z == 0) { // skip empty points
+						}
+						else {
+							//? Any sucess?
+						   // cout << endl << " Good Pixel at  i" << i << "  j " << j << "  x " << x << "  y " << y << "  z " << z << endl;
+
+
+							//Get the Image Pixel points
+							imagePoints.push_back(cv::Vec2f(projPixelB.x, projPixelB.y));
+
+
+
+							//pointcloud_tresh.at<cv::Vec3b>(i, j)[0];
+
+						   // img.at<cv::Vec3b>(i, j)[0]
+
+
+							//unsigned char b = input[img.step * j + i];
+							//unsigned char g = input[img.step * j + i + 1];
+							//unsigned char r = input[img.step * j + i + 2];
+
+							//get the point cloud loaded
+							//objectPointsP.push_back(pointcloud_tresh.at<Point3f>(i, j));
+
+							objectPointsP.push_back(cv::Point3f(x, y, z));
+						}
+					}
+				}
+			}
+
+
+			cout << endl << "min depth  " << minDepth << "   maxDepth " << maxDepth << endl;
+
+
+			processedImagePointsB.push_back(imagePoints);
+			processedobjectPointsP.push_back(objectPointsP);
+			// Mat processedImagePointsP;
+			// disparityMap.copyTo(processedImagePointsP);
+
+			//calibrateCamera(processedobjectPointsP, processedImagePointsP, imageSizeP, cameraMatrixG, distCoeffsP, rvecsP, tvecsP, CALIB_USE_INTRINSIC_GUESS);
+			//       calibrateCamera(processedobjectPointsP, processedImagePointsP, imageSizeP, cameraMatrixP, distCoeffsP, rvecsP, tvecsP);
+
+
+			Mat rvecs0 = Mat::eye(3, 3, CV_64F);
+
+			Mat tvecs0 = Mat::zeros(3, 1, CV_64F);
+			cout << endl << " Prep reproject into canon cam  " << "\n" << "Camera Matrix Canon " << "\n" << camAintrinsics << "\n" << "  rvecs " << "\n" << rvecs0 << "\n" << "  Tvecs " << "\n" << tvecs0 << endl;
+
+			//Try to project the points and see what we see from canonical camera (camera A)'s POV
+			std::vector<cv::Point2f> CanonImagePoints2;
+			//Mat projimagePoints2;
+
+
+			projectPoints(processedobjectPointsP.front(), rvecs0, tvecs0, camAintrinsics, camAdistCoeffs, CanonImagePoints2);
+			//cout << endl << " projImagepoints!  " << endl << projimagePoints2 << endl;
+
+			//Visualize the projection
+			//Against the original?
+
+			//Mat projIM;
+		   // disparityMap.copyTo(projIM); // 32fc1
+
+			//Add depth Info
+			//sqrt(x ^ 2 + y ^ 2 + z ^ 2) *
+			//255.0f / (max_depth - min_depth)
+
+			//
+			Mat projIM(blackImages[0].rows, blackImages[0].cols, CV_8UC3, Scalar(10, 10, 40));
+			for (int i = 0; i < CanonImagePoints2.size(); i++) {
+
+
+				int x = CanonImagePoints2[i].x; // note this is rounding the values we are actually getting into integer pixel values
+				int y = CanonImagePoints2[i].y;
+				int z = objectPointsP[i].z;
+
+
+				Vec3b color;
+				color[0] = sqrt(x ^ 2 + y ^ 2 + z ^ 2) * 255.0 / (max - min);
+				color[1] = 255;
+				color[2] = 0;
+
+				if (x > 0 && x < projIM.cols && y>0 && y < projIM.rows) {
+					projIM.at<Vec3b>(y, x) = color; // mats are always ROW, COL,
+				}
+
+
+			}
+			namedWindow("Project Points Canon Cam image", WINDOW_NORMAL);
+			resizeWindow("Project Points Canon Cam image", 800, 800);
+			imshow("Project Points Canon Cam image", projIM);
+			waitKey(1);
+			imwrite(outputFolder + "/" + "Canon Cam Image" + ".png", projIM);
+
 		}
 
 
