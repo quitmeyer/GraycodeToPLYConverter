@@ -224,8 +224,8 @@ int main(int argc, char** argv)
 	size_t numberOfPatternImages = graycode->getNumberOfPatternImages();
 	vector<vector<Mat> > captured_pattern;
 	captured_pattern.resize(2);//Two cameras
-	captured_pattern[0].resize(numberOfPatternImages);
-	captured_pattern[1].resize(numberOfPatternImages);
+	captured_pattern[0].resize(numberOfPatternImages);//CAM A
+	captured_pattern[1].resize(numberOfPatternImages); //CAM B
 
 	Mat color = imread(imagelist[numberOfPatternImages], IMREAD_COLOR);
 	Size imagesSize = color.size();
@@ -264,7 +264,8 @@ int main(int argc, char** argv)
 		}
 		remap(captured_pattern[0][i], captured_pattern[0][i], map1x, map1y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
 		remap(captured_pattern[1][i], captured_pattern[1][i], map2x, map2y, INTER_NEAREST, BORDER_CONSTANT, Scalar()); 
-		imshow("Show Rectified Images", captured_pattern[1][i]);
+		
+		imshow("Show Rectified Images", captured_pattern[0][i]); // show Cam A undistorted
 		waitKey(1);
 	}
 	cout << "done" << endl;
@@ -366,40 +367,9 @@ int main(int argc, char** argv)
 		if (calcCanonCamA) {
 			cout << endl << " Calculating Canon Camera Stuff " << endl;
 
-			Mat cameraMatrixCanon, distCoeffsP;
-			float aspectRatio = 16 / 9.0;
-			cameraMatrixCanon = Mat::eye(3, 3, CV_32FC1);
-			cameraMatrixCanon.at< float >(0, 0) = aspectRatio;
+			cout<< "Camera Matrix " << "\n" << camAintrinsics << endl;
 
-			//Set intial guess for camera matrix
-
-			Mat cameraMatrixG;
-			//float aspectRatio = 1.0;
-			cameraMatrixG = Mat::eye(3, 3, CV_32FC1);
-			float wCanon = params.width; // projector w
-			float hCanon = params.height; // projector h
-			float diagnonalFOV = dFOV;
-
-
-
-
-
-			float d = sqrt(powf(wCanon, 2) + powf(hCanon, 2));
-			float f = (d / 2) * cos(diagnonalFOV / 2) / sin(diagnonalFOV / 2);  // old guess  1.732; // 1.732 = cotangent(1.0472/2) where 1.0472 is 60 degrees in radians)
-
-			cameraMatrixG.at< float >(0, 0) = f;
-			cameraMatrixG.at< float >(1, 1) = f;
-			cameraMatrixG.at< float >(0, 2) = wCanon / 2; // assume it's about in the center
-			cameraMatrixG.at< float >(1, 2) = hCanon / 2; // assume it's about in the center
-
-			cout << endl << " Initial Guess at Canon Camera Matrix Intrinsics " << "\n" << "Camera Matrix " << "\n" << camAintrinsics << endl;
-
-
-			vector<Mat> rvecsP, tvecsP;
-			double repError1;
-			// Size imageSizeP = Size(params.width, params.height);
-
-			Size imageSizeP = Size(pointcloud_tresh.cols, pointcloud_tresh.rows);
+			Size imageSizeCanon = Size(pointcloud_tresh.cols, pointcloud_tresh.rows);
 
 			Point projPixelA; //= new Point(0.0, 0.0);
 
@@ -484,43 +454,32 @@ int main(int argc, char** argv)
 
 			processedImagePointsP.push_back(imagePoints);
 			processedobjectPointsP.push_back(objectPointsP);
-			// Mat processedImagePointsP;
-			// disparityMap.copyTo(processedImagePointsP);
-
-			//calibrateCamera(processedobjectPointsP, processedImagePointsP, imageSizeP, cameraMatrixG, distCoeffsP, rvecsP, tvecsP, CALIB_USE_INTRINSIC_GUESS);
-			//       calibrateCamera(processedobjectPointsP, processedImagePointsP, imageSizeP, cameraMatrixP, distCoeffsP, rvecsP, tvecsP);
-
-
+	
 			Mat rvecs0 = Mat::eye(3, 3, CV_64F);
 
 			Mat tvecs0 = Mat::zeros(3, 1, CV_64F);
 			cout << endl << " Prep reproject into canon cam  " << "\n" << "Camera Matrix Canon " << "\n" << camAintrinsics << "\n" << "  rvecs " << "\n" << rvecs0 << "\n" << "  Tvecs " << "\n" << tvecs0 << endl;
 
 			//Try to project the points and see what we see from canonical camera (camera A)'s POV
-			std::vector<cv::Point2f> CanonImagePoints2;
+			std::vector<cv::Point2f> CanonImagePoints;
+			std::vector<cv::Point2f> CamBImagePoints;
+
 			//Mat projimagePoints2;
 
+			//Project Through Camera A (Canonical)
+			projectPoints(processedobjectPointsP.front(), rvecs0, tvecs0, camAintrinsics, camAdistCoeffs, CanonImagePoints);
 
-			projectPoints(processedobjectPointsP.front(), rvecs0, tvecs0, camAintrinsics, camAdistCoeffs, CanonImagePoints2);
-			//cout << endl << " projImagepoints!  " << endl << projimagePoints2 << endl;
+			//Project Through Camera B
+			projectPoints(processedobjectPointsP.front(), R, -T, camBintrinsics, camBdistCoeffs, CamBImagePoints);
 
-			//Visualize the projection
-			//Against the original?
-
-			//Mat projIM;
-		   // disparityMap.copyTo(projIM); // 32fc1
-
-			//Add depth Info
-			//sqrt(x ^ 2 + y ^ 2 + z ^ 2) *
-			//255.0f / (max_depth - min_depth)
-
-			//
+		
+			// visualize the reprojection Canon Cam A
 			Mat projIM(blackImages[0].rows, blackImages[0].cols, CV_8UC3, Scalar(10, 10, 40));
-			for (int i = 0; i < CanonImagePoints2.size(); i++) {
+			for (int i = 0; i < CanonImagePoints.size(); i++) {
 
 
-				int x = CanonImagePoints2[i].x; // note this is rounding the values we are actually getting into integer pixel values
-				int y = CanonImagePoints2[i].y;
+				int x = CanonImagePoints[i].x; // note this is rounding the values we are actually getting into integer pixel values
+				int y = CanonImagePoints[i].y;
 				int z = objectPointsP[i].z;
 
 
@@ -532,158 +491,20 @@ int main(int argc, char** argv)
 				if (x > 0 && x < projIM.cols && y>0 && y < projIM.rows) {
 					projIM.at<Vec3b>(y, x) = color; // mats are always ROW, COL,
 				}
-
-
 			}
 			namedWindow("Project Points Canon Cam image", WINDOW_NORMAL);
-			resizeWindow("Project Points Canon Cam image", 800, 800);
+			resizeWindow("Project Points Canon Cam image", 800, 600);
 			imshow("Project Points Canon Cam image", projIM);
 			waitKey(1);
-			imwrite(outputFolder + "/" + "Canon Cam Image"+ ".png", projIM);
+			imwrite(outputFolder + "/" + "Canon Cam Image Reprojection"+ ".png", projIM);
 			
-		}
+			// visualize the reprojection through Cam B
+			Mat projIMB(blackImages[0].rows, blackImages[0].cols, CV_8UC3, Scalar(10, 10, 40));
+			for (int i = 0; i < CamBImagePoints.size(); i++) {
 
 
-		/*		//Try to reproject  Canonical Camera's points to examine calibration */
-
-		bool calcCamB = true;
-		if (calcCamB) {
-			cout << endl << " Calculating Cam B Camera Stuff " << endl;
-
-			Mat cameraMatrixB;
-			float aspectRatio = 16 / 9.0;
-			cameraMatrixB = Mat::eye(3, 3, CV_32FC1);
-			cameraMatrixB.at< float >(0, 0) = aspectRatio;
-
-			float d = sqrt(powf(wCanon, 2) + powf(hCanon, 2));
-			float f = (d / 2) * cos(diagnonalFOV / 2) / sin(diagnonalFOV / 2);  // old guess  1.732; // 1.732 = cotangent(1.0472/2) where 1.0472 is 60 degrees in radians)
-
-			
-
-			cout << "Camera Matrix " << "\n" << camBintrinsics << endl;
-
-			double repError1;
-
-			Size imageSizeP = Size(pointcloud_tresh.cols, pointcloud_tresh.rows);
-
-			Point projPixelB; //= new Point(0.0, 0.0);
-
-			std::vector<std::vector<cv::Vec2f>> processedImagePointsB;
-			vector<cv::Vec2f> imagePoints;
-
-			std::vector<std::vector<cv::Point3f>> processedobjectPointsP;
-			std::vector<cv::Point3f> objectPointsP;
-
-
-
-
-			float minDepth = 9999999999; //there has to be a better way to just have BIGGEST NUMBER
-			float maxDepth = 0;
-			float depth = 9;
-			const float* input = pointcloud_tresh.ptr<float>(0);
-			//Remember Points and Size go (x,y); (width,height) ,- Mat has (row,col).
-			for (int i = 0; i < pointcloud_tresh.rows; i++)
-			{
-				for (int j = 0; j < pointcloud_tresh.cols; j++)
-				{
-					bool error = graycode->getProjPixel(captured_pattern[0], j, i, projPixelB); //Get pixel based on view of first camera
-					if (error) {
-						// cout << endl << " Error Pixel no pattern here  i" << i <<"  j "<<j<< endl;
-
-					}
-					else // Pattern  was sucessfully detected here
-					{
-
-						// float x = input[pointcloud_tresh.step * j + i];
-						 //float y = input[pointcloud_tresh.step * j + i + 1];
-						 //float z = input[pointcloud_tresh.step * j + i + 2];
-
-
-
-						float x = pointcloud_tresh.at<Vec3f>(i, j)[0];
-						float y = pointcloud_tresh.at<Vec3f>(i, j)[1];
-						float z = pointcloud_tresh.at<Vec3f>(i, j)[2];
-						//  cout << endl << " almost Good Pixel at  i " << i <<"  j "<<j<< "  x " << x << "  y " << y << "  z " << z << endl;
-
-						depth = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
-						//Calculate min and max depth for the loop
-						if (depth > maxDepth && depth != 10000) maxDepth = depth;
-						if (depth < minDepth && depth != 10000) minDepth = depth;
-
-
-						if (x == 0 && y == 0 && z == 0) { // skip empty points
-						}
-						else {
-							//? Any sucess?
-						   // cout << endl << " Good Pixel at  i" << i << "  j " << j << "  x " << x << "  y " << y << "  z " << z << endl;
-
-
-							//Get the Image Pixel points
-							imagePoints.push_back(cv::Vec2f(projPixelB.x, projPixelB.y));
-
-
-
-							//pointcloud_tresh.at<cv::Vec3b>(i, j)[0];
-
-						   // img.at<cv::Vec3b>(i, j)[0]
-
-
-							//unsigned char b = input[img.step * j + i];
-							//unsigned char g = input[img.step * j + i + 1];
-							//unsigned char r = input[img.step * j + i + 2];
-
-							//get the point cloud loaded
-							//objectPointsP.push_back(pointcloud_tresh.at<Point3f>(i, j));
-
-							objectPointsP.push_back(cv::Point3f(x, y, z));
-						}
-					}
-				}
-			}
-
-
-			cout << endl << "min depth  " << minDepth << "   maxDepth " << maxDepth << endl;
-
-
-			processedImagePointsB.push_back(imagePoints);
-			processedobjectPointsP.push_back(objectPointsP);
-			// Mat processedImagePointsP;
-			// disparityMap.copyTo(processedImagePointsP);
-
-			//calibrateCamera(processedobjectPointsP, processedImagePointsP, imageSizeP, cameraMatrixG, distCoeffsP, rvecsP, tvecsP, CALIB_USE_INTRINSIC_GUESS);
-			//       calibrateCamera(processedobjectPointsP, processedImagePointsP, imageSizeP, cameraMatrixP, distCoeffsP, rvecsP, tvecsP);
-
-
-			Mat rvecs0 = Mat::eye(3, 3, CV_64F);
-
-			Mat tvecs0 = Mat::zeros(3, 1, CV_64F);
-			cout << endl << " Prep reproject into canon cam  " << "\n" << "Camera Matrix Canon " << "\n" << camAintrinsics << "\n" << "  rvecs " << "\n" << rvecs0 << "\n" << "  Tvecs " << "\n" << tvecs0 << endl;
-
-			//Try to project the points and see what we see from canonical camera (camera A)'s POV
-			std::vector<cv::Point2f> CanonImagePoints2;
-			//Mat projimagePoints2;
-
-
-			projectPoints(processedobjectPointsP.front(), rvecs0, tvecs0, camAintrinsics, camAdistCoeffs, CanonImagePoints2);
-			//cout << endl << " projImagepoints!  " << endl << projimagePoints2 << endl;
-
-			//Visualize the projection
-			//Against the original?
-
-			//Mat projIM;
-		   // disparityMap.copyTo(projIM); // 32fc1
-
-			//Add depth Info
-			//sqrt(x ^ 2 + y ^ 2 + z ^ 2) *
-			//255.0f / (max_depth - min_depth)
-
-			//
-			Mat projIM(blackImages[0].rows, blackImages[0].cols, CV_8UC3, Scalar(10, 10, 40));
-			for (int i = 0; i < CanonImagePoints2.size(); i++) {
-
-
-				int x = CanonImagePoints2[i].x; // note this is rounding the values we are actually getting into integer pixel values
-				int y = CanonImagePoints2[i].y;
+				int x = CamBImagePoints[i].x; // note this is rounding the values we are actually getting into integer pixel values
+				int y = CamBImagePoints[i].y;
 				int z = objectPointsP[i].z;
 
 
@@ -692,21 +513,90 @@ int main(int argc, char** argv)
 				color[1] = 255;
 				color[2] = 0;
 
-				if (x > 0 && x < projIM.cols && y>0 && y < projIM.rows) {
-					projIM.at<Vec3b>(y, x) = color; // mats are always ROW, COL,
+				if (x > 0 && x < projIMB.cols && y>0 && y < projIMB.rows) {
+					projIMB.at<Vec3b>(y, x) = color; // mats are always ROW, COL,
+				}
+			}
+			namedWindow("Project Points CAMB", WINDOW_NORMAL);
+			resizeWindow("Project Points CAMB", 800, 600);
+			imshow("Project Points CAMB", projIMB);
+			waitKey(1);
+			imwrite(outputFolder + "/" + "CAMB reproject Image" + ".png", projIMB);
+
+
+			//Calc Projector
+			cout << endl << " Calculating projector position " << endl;
+
+			Mat distCoeffsP;
+			float aspectRatio = 16 / 9.0;
+
+			//Set intial guess for camera matrix
+			Mat cameraMatrixG;
+
+			cameraMatrixG = Mat::eye(3, 3, CV_32FC1);
+			float w = params.width; // projector w
+			float h = params.height; // projector h
+			float diagnonalFOV = dFOV;
+
+			///Building a guess from our measured fields of view of the projectors
+
+			//1920 x 1080  big projector 35.1	    0.6126105675
+		   // 1366 x 768 small projector 72.88	1.271995959
+
+			float d = sqrt(powf(w, 2) + powf(h, 2));
+			float f = (d / 2) * cos(diagnonalFOV / 2) / sin(diagnonalFOV / 2);  // old guess  1.732; // 1.732 = cotangent(1.0472/2) where 1.0472 is 60 degrees in radians)
+
+			cameraMatrixG.at< float >(0, 0) = f;
+			cameraMatrixG.at< float >(1, 1) = f;
+			cameraMatrixG.at< float >(0, 2) = w / 2; // assume it's about in the center
+			cameraMatrixG.at< float >(1, 2) = h / 2; // assume it's about in the center
+
+			cout << endl << " Initial Guess at Projector Camera Matrix Intrinsics " << "\n" << "Projector Camera Matrix " << "\n" << cameraMatrixG << endl;
+
+			vector<Mat> rvecsP, tvecsP;
+			// Size imageSizeP = Size(params.width, params.height);
+
+			Size imageSizeP = Size(pointcloud_tresh.cols, pointcloud_tresh.rows);
+
+			//Run calibrate camera to try to get the intrinsics and extrinsics of the projector
+			calibrateCamera(processedobjectPointsP, processedImagePointsP, imageSizeP, cameraMatrixG, distCoeffsP, rvecsP, tvecsP, CALIB_USE_INTRINSIC_GUESS);
+
+
+		
+			cout <<  "Projector Camera Matrix after calibration " << "\n" << cameraMatrixG << "\n" << "  rvecs " << "\n" << rvecsP.front() << "\n" << "  Tvecs " << "\n" << tvecsP.front() << endl;
+
+			//Try to project the points and see what we see from the projector's point of view
+			std::vector<cv::Point2f> projimagePoints2;
+			//Mat projimagePoints2;
+			projectPoints(processedobjectPointsP.front(), rvecsP.front(), tvecsP.front(), cameraMatrixG, distCoeffsP, projimagePoints2);
+			
+
+			Mat projIMprojector(blackImages[0].rows, blackImages[0].cols, CV_8UC3, Scalar(10, 10, 40));
+			for (int i = 0; i < projimagePoints2.size(); i++) {
+
+
+				int x = projimagePoints2[i].x; // note this is rounding the values we are actually getting into integer pixel values
+				int y = projimagePoints2[i].y;
+
+
+				Vec3b color;
+				color[0] = 110;
+				color[1] = 20;
+				color[2] = 255;
+
+				if (x > 0 && x < projIMprojector.cols && y>0 && y < projIMprojector.rows) {
+					projIMprojector.at<Vec3b>(y, x) = color; // mats are always ROW, COL,
 				}
 
 
 			}
-			namedWindow("Project Points Canon Cam image", WINDOW_NORMAL);
-			resizeWindow("Project Points Canon Cam image", 800, 800);
-			imshow("Project Points Canon Cam image", projIM);
-			waitKey(1);
-			imwrite(outputFolder + "/" + "Canon Cam Image" + ".png", projIM);
+			namedWindow("Project Points Projector image", WINDOW_NORMAL);
+			resizeWindow("Project Points Projector image", 600, 600);
+			imshow("Project Points Projector image", projIMprojector);
+
 
 		}
-
-
+		
 
 		/*		//Try to calculate PROJECTOR's Intrinsic and Extrinsic matrix using the calibrate camera function in reverse */
 
@@ -715,15 +605,13 @@ int main(int argc, char** argv)
 		if (calcProj) {
 			cout << endl << " Calculating projector position " << endl;
 
-			Mat cameraMatrixP, distCoeffsP;
+			Mat  distCoeffsP;
 			float aspectRatio = 16 / 9.0;
-			cameraMatrixP = Mat::eye(3, 3, CV_32FC1);
-			cameraMatrixP.at< float >(0, 0) = aspectRatio;
+	
 
 			//Set intial guess for camera matrix
 
 			Mat cameraMatrixG;
-			//float aspectRatio = 1.0;
 			cameraMatrixG = Mat::eye(3, 3, CV_32FC1);
 			float w = params.width; // projector w
 			float h = params.height; // projector h
