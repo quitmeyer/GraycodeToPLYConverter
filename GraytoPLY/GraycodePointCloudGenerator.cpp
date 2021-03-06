@@ -470,7 +470,7 @@ int main(int argc, char** argv)
 			projectPoints(processedobjectPointsP.front(), rvecs0, tvecs0, camAintrinsics, camAdistCoeffs, CanonImagePoints);
 
 			//Project Through Camera B
-			projectPoints(processedobjectPointsP.front(), R, -T, camBintrinsics, camBdistCoeffs, CamBImagePoints);
+			projectPoints(processedobjectPointsP.front(), -R, -T, camBintrinsics, camBdistCoeffs, CamBImagePoints);
 
 		
 			// visualize the reprojection Canon Cam A
