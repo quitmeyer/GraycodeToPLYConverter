@@ -221,6 +221,10 @@ int main(int argc, char** argv)
 	cout << "camBintrinsics" << endl << camBintrinsics << endl;
 	cout << "camBdistCoeffs" << endl << camBdistCoeffs << endl;
 	cout << "T" << endl << T << endl << "R" << endl << R << endl;
+	cout << "R1" << endl << R1 << endl << "R2" << endl << R2 << endl;
+	cout << "P1" << endl << P1 << endl << "P2" << endl << P2 << endl;
+	cout << "Q" << endl << Q << endl;
+
 
 
 	if ((!R.data) || (!T.data) || (!camAintrinsics.data) || (!camBintrinsics.data) || (!camAdistCoeffs.data) || (!camBdistCoeffs.data))
