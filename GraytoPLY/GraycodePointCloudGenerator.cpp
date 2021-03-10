@@ -199,12 +199,22 @@ int main(int argc, char** argv)
 
 	// Loading calibration parameters
 	Mat camAintrinsics, camAdistCoeffs, camBintrinsics, camBdistCoeffs, R, T;
+
+	Mat R1, R2, P1, P2, Q;
+
 	fs["camA_intrinsics"] >> camAintrinsics;
 	fs["camB_intrinsics"] >> camBintrinsics;
 	fs["camA_distorsion"] >> camAdistCoeffs;
 	fs["camB_distorsion"] >> camBdistCoeffs;
 	fs["R"] >> R;
 	fs["T"] >> T;
+	fs["R1"] >> R1;
+	fs["R2"] >> R2;
+	fs["P1"] >> P1;
+	fs["P2"] >> P2;
+	fs["Q"] >> Q;
+
+
 
 	cout << "camAintrinsics" << endl << camAintrinsics << endl;
 	cout << "camAdistCoeffs" << endl << camAdistCoeffs << endl;
@@ -237,19 +247,19 @@ int main(int argc, char** argv)
 
 	// Stereo rectify
 	cout << "Rectifying images..." << endl;
-	Mat R1, R2, P1, P2, Q;
+	/*
 	Rect validRoi[2];
-	cout << "R before Stereorectify" << R << "  T before "<<T<< endl;
+	//cout << "R before Stereorectify" << R << "  T before "<<T<< endl;
 
 
 	stereoRectify(camAintrinsics, camAdistCoeffs, camBintrinsics, camBdistCoeffs, imagesSize, R, T, R1, R2, P1, P2, Q, CALIB_ZERO_DISPARITY,
 		-1, imagesSize, &validRoi[0], &validRoi[1]);
 
 	cout << "R After Stereorectify" << R << "  T after " << T << endl;
-
+	
 
 	//StereoRectify NOTE! Operation flags that may be zero or CV_CALIB_ZERO_DISPARITY. If the flag is set, the function makes the principal points of each camera have the same pixel coordinates in the rectified views. And if the flag is not set, the function may still shift the images in the horizontal or vertical direction (depending on the orientation of epipolar lines) to maximize the useful image area.
-
+	*/
 	Mat map1x, map1y, map2x, map2y;
 	initUndistortRectifyMap(camAintrinsics, camAdistCoeffs, R1, P1, imagesSize, CV_32FC1, map1x, map1y);
 	initUndistortRectifyMap(camBintrinsics, camBdistCoeffs, R2, P2, imagesSize, CV_32FC1, map2x, map2y);
