@@ -227,7 +227,7 @@ int main(int argc, char** argv)
 
 
 
-	if ((!R.data) || (!T.data) || (!camAintrinsics.data) || (!camBintrinsics.data) || (!camAdistCoeffs.data) || (!camBdistCoeffs.data))
+	if ((!R.data) || (!T.data) || (!R1.data) || (!R2.data) || (!P1.data) || (!P2.data) || (!camAintrinsics.data) || (!camBintrinsics.data) || (!camAdistCoeffs.data) || (!camBdistCoeffs.data))
 	{
 		cout << "Failed to load cameras' calibration parameters" << endl;
 		help();
