@@ -12,3 +12,14 @@ GraytoPLY/x64/Debug/GraytoPLY.ilk
 GraytoPLY/x64/Debug/GraytoPLY.exe
 GraytoPLY/x64/Debug/GraytoPLY.exe
 GraytoPLY/x64/Debug/GraycodePointCloudGenerator.obj
+*.pdb
+*.idb
+*.exe
+GraytoPLY/x64/Debug/vc142.pdb
+GraytoPLY/x64/Debug/vc142.idb
+GraytoPLY/x64/Debug/GraytoPLY.pdb
+GraytoPLY/x64/Debug/GraytoPLY.log
+GraytoPLY/x64/Debug/GraytoPLY.ilk
+GraytoPLY/x64/Debug/GraytoPLY.exe
+GraytoPLY/x64/Debug/graycodepointcloudgenerator.obj.enc
+GraytoPLY/x64/Debug/GraycodePointCloudGenerator.obj

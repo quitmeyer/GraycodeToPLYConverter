@@ -239,8 +239,16 @@ int main(int argc, char** argv)
 	cout << "Rectifying images..." << endl;
 	Mat R1, R2, P1, P2, Q;
 	Rect validRoi[2];
-	stereoRectify(camAintrinsics, camAdistCoeffs, camBintrinsics, camBdistCoeffs, imagesSize, R, T, R1, R2, P1, P2, Q, 0,
+	cout << "R before Stereorectify" << R << "  T before "<<T<< endl;
+
+
+	stereoRectify(camAintrinsics, camAdistCoeffs, camBintrinsics, camBdistCoeffs, imagesSize, R, T, R1, R2, P1, P2, Q, CALIB_ZERO_DISPARITY,
 		-1, imagesSize, &validRoi[0], &validRoi[1]);
+
+	cout << "R After Stereorectify" << R << "  T after " << T << endl;
+
+
+	//StereoRectify NOTE! Operation flags that may be zero or CV_CALIB_ZERO_DISPARITY. If the flag is set, the function makes the principal points of each camera have the same pixel coordinates in the rectified views. And if the flag is not set, the function may still shift the images in the horizontal or vertical direction (depending on the orientation of epipolar lines) to maximize the useful image area.
 
 	Mat map1x, map1y, map2x, map2y;
 	initUndistortRectifyMap(camAintrinsics, camAdistCoeffs, R1, P1, imagesSize, CV_32FC1, map1x, map1y);
@@ -414,26 +422,34 @@ int main(int argc, char** argv)
 			float depth = 9;
 			const float* input = pointcloud_tresh.ptr<float>(0);
 
-			//Loop through the pointcloud to gather all the detected points
+			//Loop through the pointcloud to gather corresponding pairs between
+			//-all the image points (x,y)
+			//	-All the detected object points (X,Y,Z) (I think the XY are different than the x,y of the pixels
+			//According to reprojectImageto3D  Each element of _3dImage(x,y) contains 3D coordinates of the point (x,y) computed from the disparity map.
 			//Remember Points and Size go (x,y); (width,height) ,- Mat has (row,col).
 			for (int i = 0; i < pointcloud_tresh.rows; i++)
 			{
 				for (int j = 0; j < pointcloud_tresh.cols; j++)
 				{
-					// We might not have to go back to get Proj Pixel
-					bool error = graycode->getProjPixel(captured_pattern[0], j, i, projPixelA); //Get pixel based on view of first camera
+					// We might not have to go back to get Proj Pixel???
+					//bool error = graycode->getProjPixel(captured_pattern[0], j, i, projPixelA); //Get pixel based on view of first camera
+					bool error = false;
 					if (error) {
 						// cout << endl << " Error Pixel no pattern here  i" << i <<"  j "<<j<< endl;
 					}
-					else // Pattern  was sucessfully detected here
+					else { // Pattern  was sucessfully detected here
 
-						// float x = input[pointcloud_tresh.step * j + i];
-						 //float y = input[pointcloud_tresh.step * j + i + 1];
-						 //float z = input[pointcloud_tresh.step * j + i + 2];
+						//Do we need getProjPixel???
 
-						float x = pointcloud_tresh.at<Vec3f>(i, j)[0];
-						float y = pointcloud_tresh.at<Vec3f>(i, j)[1];
-						float z = pointcloud_tresh.at<Vec3f>(i, j)[2];
+						float x = i;
+					float y = j;
+					float z = pointcloud_tresh.at<float>(i, j); // Not sure what this value is
+						//cout << endl << " direct pCL i =" << i << "  j " << j << "  x " << x << "  y " << y << "  z " << z << endl;
+
+
+						 x = pointcloud_tresh.at<Vec3f>(i, j)[0];
+						 y = pointcloud_tresh.at<Vec3f>(i, j)[1];
+						z = pointcloud_tresh.at<Vec3f>(i, j)[2];
 						//  cout << endl << " almost Good Pixel at  i " << i <<"  j "<<j<< "  x " << x << "  y " << y << "  z " << z << endl;
 
 						depth = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
@@ -445,26 +461,9 @@ int main(int argc, char** argv)
 						if (x == 0 && y == 0 && z == 0) { // skip empty points
 						}
 						else {
-				
-
 							//Get the Image Pixel points
 							cv::Vec2f apoint;
 							imagePoints.push_back(cv::Vec2f(projPixelA.x, projPixelA.y));
-
-
-
-							//pointcloud_tresh.at<cv::Vec3b>(i, j)[0];
-
-						   // img.at<cv::Vec3b>(i, j)[0]
-
-
-							//unsigned char b = input[img.step * j + i];
-							//unsigned char g = input[img.step * j + i + 1];
-							//unsigned char r = input[img.step * j + i + 2];
-
-							//get the point cloud loaded
-							//objectPointsP.push_back(pointcloud_tresh.at<Point3f>(i, j));
-
 							objectPointsP.push_back(cv::Point3f(x, y, z));
 						}
 					}
@@ -493,21 +492,21 @@ int main(int argc, char** argv)
 			projectPoints(processedobjectPointsP.front(), rvecs0, tvecs0, camAintrinsics, camAdistCoeffs, CanonImagePoints);
 
 			//Project Through Camera B
-			projectPoints(processedobjectPointsP.front(), -R, -T, camBintrinsics, camBdistCoeffs, CamBImagePoints);
+			projectPoints(processedobjectPointsP.front(), R, T, camBintrinsics, camBdistCoeffs, CamBImagePoints);
 
 
 			// visualize the reprojection Canon Cam A
-			Mat projIM(blackImages[0].rows, blackImages[0].cols, CV_8UC3, Scalar(10, 10, 40));
+			Mat projIM(whiteImages[0].rows, whiteImages[0].cols, CV_8UC3, Scalar(10, 10, 40));
 			for (int i = 0; i < CanonImagePoints.size(); i++) {
 
-
+				
 				int x = CanonImagePoints[i].x; // note this is rounding the values we are actually getting into integer pixel values
 				int y = CanonImagePoints[i].y;
 				int z = objectPointsP[i].z;
 
 
 				Vec3b color;
-				color[0] = sqrt(x ^ 2 + y ^ 2 + z ^ 2) * 255.0 / (max - min);
+				color[0] = sqrt(x ^ 2 + y ^ 2 + z ^ 2) * 255.0 / (maxDepth - minDepth);
 				color[1] = 255;
 				color[2] = 0;
 
@@ -522,7 +521,7 @@ int main(int argc, char** argv)
 			imwrite(outputFolder + "/" + "Canon Cam Image Reprojection" + ".png", projIM);
 
 			// visualize the reprojection through Cam B
-			Mat projIMB(blackImages[0].rows, blackImages[0].cols, CV_8UC3, Scalar(10, 10, 40));
+			Mat projIMB(whiteImages[0].rows, whiteImages[0].cols, CV_8UC3, Scalar(10, 10, 40));
 			for (int i = 0; i < CamBImagePoints.size(); i++) {
 
 
@@ -532,7 +531,7 @@ int main(int argc, char** argv)
 
 
 				Vec3b color;
-				color[0] = sqrt(x ^ 2 + y ^ 2 + z ^ 2) * 255.0 / (max - min);
+				color[0] = sqrt(x ^ 2 + y ^ 2 + z ^ 2) * 255.0 / (maxIDX - minIDX);
 				color[1] = 255;
 				color[2] = 0;
 
