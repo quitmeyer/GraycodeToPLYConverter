@@ -409,27 +409,30 @@ int main(int argc, char** argv)
 			cout << "minMaxIDX " << "\n" << minIDX<<"   max= "<<maxIDX << endl;
 
 
+
 			float minDepth = FLT_MAX; 
 			float maxDepth = -FLT_MAX;
 			float depth = 9;
 			const float* input = pointcloud_tresh.ptr<float>(0);
 
-			//Loop through the pointcloud to gather all the detected points
 			//Remember Points and Size go (x,y); (width,height) ,- Mat has (row,col).
 			for (int i = 0; i < pointcloud_tresh.rows; i++)
 			{
 				for (int j = 0; j < pointcloud_tresh.cols; j++)
 				{
-					// We might not have to go back to get Proj Pixel
 					bool error = graycode->getProjPixel(captured_pattern[0], j, i, projPixelA); //Get pixel based on view of first camera
 					if (error) {
 						// cout << endl << " Error Pixel no pattern here  i" << i <<"  j "<<j<< endl;
+
 					}
 					else // Pattern  was sucessfully detected here
+					{
 
 						// float x = input[pointcloud_tresh.step * j + i];
 						 //float y = input[pointcloud_tresh.step * j + i + 1];
 						 //float z = input[pointcloud_tresh.step * j + i + 2];
+
+
 
 						float x = pointcloud_tresh.at<Vec3f>(i, j)[0];
 						float y = pointcloud_tresh.at<Vec3f>(i, j)[1];
@@ -445,7 +448,9 @@ int main(int argc, char** argv)
 						if (x == 0 && y == 0 && z == 0) { // skip empty points
 						}
 						else {
-				
+							//? Any sucess?
+						   // cout << endl << " Good Pixel at  i" << i << "  j " << j << "  x " << x << "  y " << y << "  z " << z << endl;
+
 
 							//Get the Image Pixel points
 							cv::Vec2f apoint;
