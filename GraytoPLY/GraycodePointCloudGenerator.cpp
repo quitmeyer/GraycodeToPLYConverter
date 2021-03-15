@@ -249,28 +249,9 @@ int main(int argc, char** argv)
 	.......PROCESSING STAGES.........
 	*/
 
-	// Stereo rectify
-	cout << "Rectifying images..." << endl;
-	/*
-	Rect validRoi[2];
-	//cout << "R before Stereorectify" << R << "  T before "<<T<< endl;
 
+	//LOADING ALL IMAGES
 
-	stereoRectify(camAintrinsics, camAdistCoeffs, camBintrinsics, camBdistCoeffs, imagesSize, R, T, R1, R2, P1, P2, Q, CALIB_ZERO_DISPARITY,
-		-1, imagesSize, &validRoi[0], &validRoi[1]);
-
-	cout << "R After Stereorectify" << R << "  T after " << T << endl;
-	
-
-	//StereoRectify NOTE! Operation flags that may be zero or CV_CALIB_ZERO_DISPARITY. If the flag is set, the function makes the principal points of each camera have the same pixel coordinates in the rectified views. And if the flag is not set, the function may still shift the images in the horizontal or vertical direction (depending on the orientation of epipolar lines) to maximize the useful image area.
-	*/
-	Mat map1x, map1y, map2x, map2y;
-	initUndistortRectifyMap(camAintrinsics, camAdistCoeffs, R1, P1, imagesSize, CV_32FC1, map1x, map1y);
-	initUndistortRectifyMap(camBintrinsics, camBdistCoeffs, R2, P2, imagesSize, CV_32FC1, map2x, map2y);
-
-	namedWindow("Show Rectified Images", WINDOW_NORMAL);
-
-	resizeWindow("Show Rectified Images", 600, 400);
 
 	// Loading pattern images
 	for (size_t i = 0; i < numberOfPatternImages; i++)
@@ -288,15 +269,10 @@ int main(int argc, char** argv)
 			return -1;
 		}
 
-		//Recitify the images from both cameras
-		remap(captured_pattern[0][i], captured_pattern[0][i], map1x, map1y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
-		remap(captured_pattern[1][i], captured_pattern[1][i], map2x, map2y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
-
-		imshow("Show Rectified Images", captured_pattern[0][i]); // show Cam A undistorted
-		waitKey(1);
+		
 	}
-	cout << "done" << endl;
 
+	//get the white and black images
 	vector<Mat> blackImages;
 	vector<Mat> whiteImages;
 
@@ -310,18 +286,150 @@ int main(int argc, char** argv)
 	blackImages[0] = imread(imagelist[numberOfPatternImages + 1], IMREAD_GRAYSCALE);
 	blackImages[1] = imread(imagelist[2 * numberOfPatternImages + 2 + 1], IMREAD_GRAYSCALE);
 
-	remap(color, color, map2x, map2y, INTER_NEAREST, BORDER_CONSTANT, Scalar()); //Rectify the color image Reference
 
-	remap(whiteImages[0], whiteImages[0], map1x, map1y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
-	remap(whiteImages[1], whiteImages[1], map2x, map2y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
-
-	//For debugging comparisons. let's save a copy of these white images from both cameras
-	imwrite(outputFolder + "/" + "whiteimg rect camA" + ".png", whiteImages[0]);
-	imwrite(outputFolder + "/" + "whiteimg rect camB" + ".png", whiteImages[1]);
+	cout << "done loading images" << endl;
 
 
-	remap(blackImages[0], blackImages[0], map1x, map1y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
-	remap(blackImages[1], blackImages[1], map2x, map2y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
+
+
+	//Decoding Projector Pixels	
+	bool decodeVis = false;
+	if (decodeVis) {
+		cout << "Decoding the Projected Pixels camA" << endl;
+
+		Mat camADecodedViz(whiteImages[0].rows, whiteImages[0].cols, CV_8UC3); // Start with all black images
+		Mat camBDecodedViz(whiteImages[0].rows, whiteImages[0].cols, CV_8UC3);
+		Point projPixelA; //= new Point(0.0, 0.0);
+
+		//coordinates of projected pixels
+	//Xc is camera pixel for cams A and B, Xp is projector location
+		std::vector<int>	XcA;
+		std::vector<int>	YcA;
+		std::vector<int>	XcB;
+		std::vector<int>	YcB;
+		std::vector<int>	XpA;
+		std::vector<int>	YpA;
+		std::vector<int>	XpB;
+		std::vector<int>	YpB;
+
+		for (int i = 0; i < camADecodedViz.rows; i++)
+		{
+			for (int j = 0; j < camADecodedViz.cols; j++)
+			{
+
+				if (abs((float)whiteImages[0].at<uchar>(i, j) - (float)blackImages[0].at<uchar>(i, j)) > 30) {
+
+
+					bool error = graycode->getProjPixel(captured_pattern[0], j, i, projPixelA); //Get pixel based on view of first camera
+
+					if (error) {
+						// cout << endl << " Error Pixel no pattern here  i" << i <<"  j "<<j<< endl;
+						Vec3b color; //BGR
+						color[0] = 0;
+						color[1] = 0;
+						color[2] = 255;
+						camADecodedViz.at<Vec3b>(i, j) = color;
+					}
+					else { // Pattern  was sucessfully detected here
+
+
+						//Decode the pattern 
+						 /*
+					Spit out image grayscale
+					CSV - 4 cols, Xc, Yc, Xp, Yp,
+					Rows - pixels of camera
+					*/
+
+						Vec3b color;
+						color[0] = static_cast<double>(projPixelA.x) / params.width * 255.0;
+						color[1] = static_cast<double>(projPixelA.y) / params.height * 255.0;
+						color[2] = 0;
+
+						camADecodedViz.at<Vec3b>(i, j) = color;
+
+
+						XcA.push_back(j);
+						YcA.push_back(i);
+						XpA.push_back(projPixelA.y);
+						YpA.push_back(projPixelA.y);
+					}
+				}
+				else {
+					Vec3b color;
+					color[0] = 0;
+					color[1] = 0;
+					color[2] = 0;
+
+					camADecodedViz.at<Vec3b>(i, j) = color;
+				}
+			}
+
+		}
+		imwrite(outputFolder + "/" + "Graycode Decode camA" + ".png", camADecodedViz);
+
+	}
+
+
+
+	// Stereo rectify IMAGES
+
+	bool rectify = true;
+	if (rectify) {
+		cout << "Rectifying images..." << endl;
+		/*
+		Rect validRoi[2];
+		//cout << "R before Stereorectify" << R << "  T before "<<T<< endl;
+
+
+		stereoRectify(camAintrinsics, camAdistCoeffs, camBintrinsics, camBdistCoeffs, imagesSize, R, T, R1, R2, P1, P2, Q, CALIB_ZERO_DISPARITY,
+			-1, imagesSize, &validRoi[0], &validRoi[1]);
+
+		cout << "R After Stereorectify" << R << "  T after " << T << endl;
+
+
+		//StereoRectify NOTE! Operation flags that may be zero or CV_CALIB_ZERO_DISPARITY. If the flag is set, the function makes the principal points of each camera have the same pixel coordinates in the rectified views. And if the flag is not set, the function may still shift the images in the horizontal or vertical direction (depending on the orientation of epipolar lines) to maximize the useful image area.
+		*/
+		Mat map1x, map1y, map2x, map2y;
+		initUndistortRectifyMap(camAintrinsics, camAdistCoeffs, R1, P1, imagesSize, CV_32FC1, map1x, map1y);
+		initUndistortRectifyMap(camBintrinsics, camBdistCoeffs, R2, P2, imagesSize, CV_32FC1, map2x, map2y);
+
+		namedWindow("Show Rectified Images", WINDOW_NORMAL);
+
+		resizeWindow("Show Rectified Images", 600, 400);
+
+		// Loading pattern images
+		for (size_t i = 0; i < numberOfPatternImages; i++)
+		{
+			cout << i + 1 << " of " << numberOfPatternImages << endl;
+
+			//Recitify the images from both cameras
+			remap(captured_pattern[0][i], captured_pattern[0][i], map1x, map1y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
+			remap(captured_pattern[1][i], captured_pattern[1][i], map2x, map2y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
+
+			imshow("Show Rectified Images", captured_pattern[0][i]); // show Cam A undistorted
+			waitKey(1);
+		}
+
+
+
+		remap(color, color, map2x, map2y, INTER_NEAREST, BORDER_CONSTANT, Scalar()); //Rectify the color image Reference
+
+		remap(whiteImages[0], whiteImages[0], map1x, map1y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
+		remap(whiteImages[1], whiteImages[1], map2x, map2y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
+
+		//For debugging comparisons. let's save a copy of these white images from both cameras
+		imwrite(outputFolder + "/" + "whiteimg rect camA" + ".png", whiteImages[0]);
+		imwrite(outputFolder + "/" + "whiteimg rect camB" + ".png", whiteImages[1]);
+
+
+		remap(blackImages[0], blackImages[0], map1x, map1y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
+		remap(blackImages[1], blackImages[1], map2x, map2y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
+
+		cout << "done" << endl;
+
+	}
+
+	
 
 	cout << endl << "Decoding Graycode pattern ..." << endl;
 	Mat disparityMap;
@@ -348,7 +456,7 @@ int main(int argc, char** argv)
 		convertScaleAbs(disparityMap, scaledDisparityMap, 255 / (max - min));// TODO for some reason our color map shoudl look rainbow like, but is just barely visiable as blue. our scaling must be wrong
 		//disparityMap.copyT312o(scaledDisparityMap);
 		//scaledDisparityMap.convertTo(scaledDisparityMap, CV_8UC1);
-		applyColorMap(scaledDisparityMap, cm_disp, COLORMAP_RAINBOW); 
+		applyColorMap(scaledDisparityMap, cm_disp, COLORMAP_RAINBOW);
 
 		//Shows the disparity map as a RECTIFIED image
 		imshow("cm disparity m", cm_disp);
@@ -381,8 +489,14 @@ int main(int argc, char** argv)
 		waitKey(1);
 		// Apply the mask to the point cloud
 		Mat pointcloud_tresh, color_tresh;
-		pointCloud.copyTo(pointcloud_tresh, thresholded_disp);
+
+		pointCloud.copyTo(pointcloud_tresh, thresholded_disp); // This applies a thresholded mask on the pointcloud, but honestly i don't see a difference
+		//pointCloud.copyTo(pointcloud_tresh);
 		color.copyTo(color_tresh, thresholded_disp);
+
+		//can I save the pointcloud mat as an Image? Yes you can!
+		imwrite(outputFolder + "/" + "Raw Pointcloud Save" + ".png", pointcloud_tresh);
+		imwrite(outputFolder + "/" + "WB mask thresholded disp " + ".png", thresholded_disp);
 
 
 		/*
@@ -403,7 +517,7 @@ int main(int argc, char** argv)
 
 
 		/*		Reprojections
-		//Try to reproject  Canonical Camera's points to examine calibration 
+		//Try to reproject  Canonical Camera's points to examine calibration
 		*/
 
 
@@ -414,7 +528,7 @@ int main(int argc, char** argv)
 
 			cout << "Camera Matrix Cam A " << "\n" << camAintrinsics << endl;
 
-			Size imageSizeCanon = Size(pointcloud_tresh.cols, pointcloud_tresh.rows);
+			//Size imageSizeCanon = Size(pointcloud_tresh.cols, pointcloud_tresh.rows);
 
 			Point projPixelA; //= new Point(0.0, 0.0);
 
@@ -428,67 +542,77 @@ int main(int argc, char** argv)
 			double minIDX;
 			double maxIDX;
 			minMaxIdx(pointcloud_tresh, &minIDX, &maxIDX);
-			cout << "minMaxIDX " << "\n" << minIDX<<"   max= "<<maxIDX << endl;
+			cout << "minMaxIDX " << "\n" << minIDX << "   max= " << maxIDX << endl;
 
 
-			float minDepth = FLT_MAX; 
+			float minDepth = FLT_MAX;
 			float maxDepth = -FLT_MAX;
 			float depth = 9;
-			const float* input = pointcloud_tresh.ptr<float>(0);
+			//const float* input = pointcloud_tresh.ptr<float>(0);
+
+
+
+
+
 
 			//Loop through the pointcloud to gather corresponding pairs between
 			//-all the image points (x,y)
 			//	-All the detected object points (X,Y,Z) (I think the XY are different than the x,y of the pixels
 			//According to reprojectImageto3D  Each element of _3dImage(x,y) contains 3D coordinates of the point (x,y) computed from the disparity map.
-			//Remember Points and Size go (x,y); (width,height) ,- Mat has (row,col).
+			//Remember Points and Size go (x,y); (width,height) ,- Mat has ( row, col).
+
+			cout << "Starting Pointcloud Loop" << endl;
+
 			for (int i = 0; i < pointcloud_tresh.rows; i++)
 			{
 				for (int j = 0; j < pointcloud_tresh.cols; j++)
 				{
-					// We might not have to go back to get Proj Pixel???
-					//bool error = graycode->getProjPixel(captured_pattern[0], j, i, projPixelA); //Get pixel based on view of first camera
-					bool error = false;
-					if (error) {
-						// cout << endl << " Error Pixel no pattern here  i" << i <<"  j "<<j<< endl;
+
+					//if the pixel is not shadowed, reconstruct
+				   //TODO save shadowMask to files
+				   //TODO change the Puts of how we are setting the pixels
+				   // img<uchar>.at(row,col) = 0
+				   // img.at<Vec3b>(y, x)
+
+				   //img.at<Vec3b>(y,x) = intensity
+				   //Vec4b & bgra = mat.at<Vec4b>(i, j);
+				   //Vec4b intensity(b, g, r, a)
+				   //mat.at<Vec4b>(i,j) = intensity
+				   //find the                 ShadowMaskA.type();
+
+
+						//The pointcloud stores a set of 3D points. Every point in the Mat (i,j) refers to a 3D point at 0 , 1, 2 (aka xyz)
+					float x = pointcloud_tresh.at<Vec3f>(i, j)[0];
+					float y = pointcloud_tresh.at<Vec3f>(i, j)[1];
+					float z = pointcloud_tresh.at<Vec3f>(i, j)[2];
+					//  cout << endl << " almost Good Pixel at  i " << i <<"  j "<<j<< "  x " << x << "  y " << y << "  z " << z << endl;
+
+
+
+					depth = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
+					//Calculate min and max depth for the loop
+					if (depth > maxDepth && depth != 10000) maxDepth = depth;
+					if (depth < minDepth && depth != 10000) minDepth = depth;
+
+
+					if (x == 0 && y == 0 && z == 0) { // skip empty points
 					}
-					else { // Pattern  was sucessfully detected here
-
-						//Do we need getProjPixel???
-
-						float x = i;
-					float y = j;
-					float z = pointcloud_tresh.at<float>(i, j); // Not sure what this value is
-						//cout << endl << " direct pCL i =" << i << "  j " << j << "  x " << x << "  y " << y << "  z " << z << endl;
-
-
-						 x = pointcloud_tresh.at<Vec3f>(i, j)[0];
-						 y = pointcloud_tresh.at<Vec3f>(i, j)[1];
-						z = pointcloud_tresh.at<Vec3f>(i, j)[2];
-						//  cout << endl << " almost Good Pixel at  i " << i <<"  j "<<j<< "  x " << x << "  y " << y << "  z " << z << endl;
-
-						depth = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
-						//Calculate min and max depth for the loop
-						if (depth > maxDepth && depth != 10000) maxDepth = depth;
-						if (depth < minDepth && depth != 10000) minDepth = depth;
-
-
-						if (x == 0 && y == 0 && z == 0) { // skip empty points
-						}
-						else {
-							//Get the Image Pixel points
-							cv::Vec2f apoint;
-							imagePoints.push_back(cv::Vec2f(projPixelA.x, projPixelA.y));
-							objectPointsP.push_back(cv::Point3f(x, y, z));
-						}
+					else {
+						//Get the Image Pixel points
+						cv::Vec2f apoint;
+						imagePoints.push_back(cv::Vec2f(projPixelA.x, projPixelA.y));
+						objectPointsP.push_back(cv::Point3f(x, y, z));
 					}
-				}
-			}
+
+				} // pointcloud cols
+			}//pointcloud rows
+
 
 
 			cout << endl << "min depth  " << minDepth << "   maxDepth " << maxDepth << endl;
 
 
-			processedImagePointsP.push_back(imagePoints);
+			processedImagePointsP.push_back(imagePoints); // Do we ever really need the image points past here, i don't think so
 			processedobjectPointsP.push_back(objectPointsP);
 
 			Mat rvecs0 = Mat::eye(3, 3, CV_64F);
@@ -503,24 +627,26 @@ int main(int argc, char** argv)
 			//Mat projimagePoints2;
 
 			//Project Through Camera A (Canonical)
-			projectPoints(processedobjectPointsP.front(), rvecs0, tvecs0, camAintrinsics, camAdistCoeffs, CanonImagePoints);
+			projectPoints(processedobjectPointsP.front(), rvecs0, tvecs0, camAintrinsics, camAdistCoeffs, CanonImagePoints);// 
 
+			Mat Rt;
+				transpose(R, Rt);
 			//Project Through Camera B
-			projectPoints(processedobjectPointsP.front(), R, T, camBintrinsics, camBdistCoeffs, CamBImagePoints);
+			projectPoints(processedobjectPointsP.front(), Rt, -T, camBintrinsics, camBdistCoeffs, CamBImagePoints); // Cam B is quite close when it is R and -T
 
 
 			// visualize the reprojection Canon Cam A
 			Mat projIM(whiteImages[0].rows, whiteImages[0].cols, CV_8UC3, Scalar(10, 10, 40));
 			for (int i = 0; i < CanonImagePoints.size(); i++) {
 
-				
+
 				int x = CanonImagePoints[i].x; // note this is rounding the values we are actually getting into integer pixel values
 				int y = CanonImagePoints[i].y;
 				int z = objectPointsP[i].z;
 
 
-				Vec3b color;
-				color[0] = sqrt(x ^ 2 + y ^ 2 + z ^ 2) * 255.0 / (maxDepth - minDepth);
+				Vec3b color; // RGB
+				color[0] = sqrt(x ^ 2 + y ^ 2 + z ^ 2) / ((float)maxDepth - minDepth)* 255.0;
 				color[1] = 255;
 				color[2] = 0;
 
@@ -796,13 +922,13 @@ int main(int argc, char** argv)
 			resizeWindow("Project Points Projector image", 600, 600);
 			imshow("Project Points Projector image", projIM);
 		}
-
-
-		cout << endl << " All  Finished  " << endl;
-
-
-
-		waitKey();
-		return 0;
 	}
+
+	cout << endl << " All  Finished  " << endl;
+
+
+
+	waitKey();
+	return 0;
+
 }
