@@ -30,3 +30,9 @@ GraytoPLY/x64/Debug/GraytoPLY.pdb
 GraytoPLY/x64/Debug/GraytoPLY.ilk
 GraytoPLY/x64/Debug/GraytoPLY.exe
 GraytoPLY/x64/Debug/GraycodePointCloudGenerator.obj
+*.pdb
+*.idb
+*.tlog
+*.exe
+*.obj
+*.ipch
