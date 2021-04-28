@@ -14,6 +14,12 @@ and it will
 
 */
 
+//TODO - get rid of undistort
+// then decode the graycode
+
+//brute force find correspondances
+
+// Check the rectify from Cam A to Cam B
 
 #include <iostream>
 #include <opencv2/core.hpp>
@@ -384,6 +390,10 @@ int main(int argc, char** argv)
 		stereoRectify(camAintrinsics, camAdistCoeffs, camBintrinsics, camBdistCoeffs, imagesSize, R, T, R1, R2, P1, P2, Q, CALIB_ZERO_DISPARITY,
 			-1, imagesSize, &validRoi[0], &validRoi[1]);
 
+				// -1 will give default scaling
+	//0 means no black pixels in image
+	//1 means all valid pixels are in image (black usually around borders)
+
 		cout << "R After Stereorectify" << R << "  T after " << T << endl;
 
 
@@ -397,25 +407,27 @@ int main(int argc, char** argv)
 
 		resizeWindow("Show Rectified Images", 600, 400);
 
+		// Apply the Remapping
+
+
 		// Loading pattern images
 		for (size_t i = 0; i < numberOfPatternImages; i++)
 		{
 			cout << i + 1 << " of " << numberOfPatternImages << endl;
 
 			//Recitify the images from both cameras
-			remap(captured_pattern[0][i], captured_pattern[0][i], map1x, map1y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
-			remap(captured_pattern[1][i], captured_pattern[1][i], map2x, map2y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
+		//	remap(captured_pattern[0][i], captured_pattern[0][i], map1x, map1y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
+			//remap(captured_pattern[1][i], captured_pattern[1][i], map2x, map2y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
 
 			imshow("Show Rectified Images", captured_pattern[0][i]); // show Cam A undistorted
 			waitKey(1);
 		}
 
 
+		//remap(color, color, map2x, map2y, INTER_NEAREST, BORDER_CONSTANT, Scalar()); //Rectify the color image Reference
 
-		remap(color, color, map2x, map2y, INTER_NEAREST, BORDER_CONSTANT, Scalar()); //Rectify the color image Reference
-
-		remap(whiteImages[0], whiteImages[0], map1x, map1y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
-		remap(whiteImages[1], whiteImages[1], map2x, map2y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
+		//remap(whiteImages[0], whiteImages[0], map1x, map1y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
+		//remap(whiteImages[1], whiteImages[1], map2x, map2y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
 
 		//For debugging comparisons. let's save a copy of these white images from both cameras
 		imwrite(outputFolder + "/" + "whiteimg rect camA" + ".png", whiteImages[0]);
@@ -626,13 +638,17 @@ int main(int argc, char** argv)
 
 			//Mat projimagePoints2;
 
+			/// Take pointcloud from reproject and look at those values, check the min max x coord  , min max y, min max z, compared pointcloud with the disparity from graycode-decode
+
+
+
 			//Project Through Camera A (Canonical)
 			projectPoints(processedobjectPointsP.front(), rvecs0, tvecs0, camAintrinsics, camAdistCoeffs, CanonImagePoints);// 
 
 			Mat Rt;
 				transpose(R, Rt);
 			//Project Through Camera B
-			projectPoints(processedobjectPointsP.front(), Rt, -T, camBintrinsics, camBdistCoeffs, CamBImagePoints); // Cam B is quite close when it is R and -T
+			projectPoints(processedobjectPointsP.front(), R, -T, camBintrinsics, camBdistCoeffs, CamBImagePoints); // Cam B is quite close when it is R and -T
 
 
 			// visualize the reprojection Canon Cam A
