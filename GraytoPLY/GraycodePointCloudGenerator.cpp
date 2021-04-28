@@ -19,7 +19,7 @@ and it will
 
 //brute force find correspondances
 
-// Check the rectify from Cam A to Cam B
+// XXX Check the rectify from Cam A to Cam B -- DOESN"T DO IT!
 
 #include <iostream>
 #include <opencv2/core.hpp>
@@ -416,18 +416,18 @@ int main(int argc, char** argv)
 			cout << i + 1 << " of " << numberOfPatternImages << endl;
 
 			//Recitify the images from both cameras
-		//	remap(captured_pattern[0][i], captured_pattern[0][i], map1x, map1y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
-			//remap(captured_pattern[1][i], captured_pattern[1][i], map2x, map2y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
+			remap(captured_pattern[0][i], captured_pattern[0][i], map1x, map1y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
+			remap(captured_pattern[1][i], captured_pattern[1][i], map2x, map2y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
 
 			imshow("Show Rectified Images", captured_pattern[0][i]); // show Cam A undistorted
 			waitKey(1);
 		}
 
 
-		//remap(color, color, map2x, map2y, INTER_NEAREST, BORDER_CONSTANT, Scalar()); //Rectify the color image Reference
+		remap(color, color, map2x, map2y, INTER_NEAREST, BORDER_CONSTANT, Scalar()); //Rectify the color image Reference
 
-		//remap(whiteImages[0], whiteImages[0], map1x, map1y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
-		//remap(whiteImages[1], whiteImages[1], map2x, map2y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
+		remap(whiteImages[0], whiteImages[0], map1x, map1y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
+		remap(whiteImages[1], whiteImages[1], map2x, map2y, INTER_NEAREST, BORDER_CONSTANT, Scalar());
 
 		//For debugging comparisons. let's save a copy of these white images from both cameras
 		imwrite(outputFolder + "/" + "whiteimg rect camA" + ".png", whiteImages[0]);
