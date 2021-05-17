@@ -19,6 +19,11 @@ and it will
 
 //brute force find correspondances
 
+//Manually check to see if the correspondance from a projector pixel is at the same spot in both images
+
+//Try triangulate points methods in openCV
+
+
 // XXX Check the rectify from Cam A to Cam B -- DOESN"T DO IT!
 
 #include <iostream>
@@ -299,7 +304,7 @@ int main(int argc, char** argv)
 
 
 	//Decoding Projector Pixels	
-	bool decodeVis = false;
+	bool decodeVis = true;
 	if (decodeVis) {
 		cout << "Decoding the Projected Pixels camA" << endl;
 
@@ -379,7 +384,7 @@ int main(int argc, char** argv)
 
 	// Stereo rectify IMAGES
 
-	bool rectify = true;
+	bool rectify = false;
 	if (rectify) {
 		cout << "Rectifying images..." << endl;
 		/*
@@ -455,7 +460,7 @@ int main(int argc, char** argv)
 	{
 		cout << endl << "pattern decoded! Hooray!" << endl;
 
-		//TODO put the function from the scanning code in here that creates our CSV of matches between pixels and points on the decoded imagery
+		//qw put the function from the scanning code in here that creates our CSV of matches between pixels and points on the decoded imagery
 
 		// To better visualize the result, apply a colormap to the computed disparity
 		double min;
@@ -463,8 +468,10 @@ int main(int argc, char** argv)
 		minMaxIdx(disparityMap, &min, &max);
 		Mat cm_disp, scaledDisparityMap;
 		cout << "disp min " << min << endl << "disp max " << max << endl;
-		max = 284;
-		min = -312; // these are arbitrary numbers that seem to be more around the actual scale
+		
+		//max = 284;
+		//min = -312; // these are arbitrary numbers that seem to be more around the actual scale
+		
 		convertScaleAbs(disparityMap, scaledDisparityMap, 255 / (max - min));// TODO for some reason our color map shoudl look rainbow like, but is just barely visiable as blue. our scaling must be wrong
 		//disparityMap.copyT312o(scaledDisparityMap);
 		//scaledDisparityMap.convertTo(scaledDisparityMap, CV_8UC1);
