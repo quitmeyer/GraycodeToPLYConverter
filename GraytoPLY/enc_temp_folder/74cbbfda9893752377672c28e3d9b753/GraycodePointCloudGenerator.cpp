@@ -537,8 +537,7 @@ int main(int argc, char** argv)
 		color.copyTo(color_tresh, thresholded_disp);
 
 		//can I save the pointcloud mat as an Image? Yes you can!
-		//imwrite(outputFolder + "/" + "Raw Pointcloud Save" + ".png", pointcloud_tresh);
-		
+		imwrite(outputFolder + "/" + "Raw Pointcloud Save" + ".png", pointcloud_tresh);
 		imwrite(outputFolder + "/" + "WB mask thresholded disp " + ".png", thresholded_disp);
 
 
