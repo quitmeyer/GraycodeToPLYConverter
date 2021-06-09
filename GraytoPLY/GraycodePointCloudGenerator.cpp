@@ -47,7 +47,7 @@ static const char* keys =
 
 	"{images_list          |C:/Users/andre/Desktop/Glowcake Hoss/Calibrations/TestDecode/SLdata.yml|}" //For windows have to change all backslashes to forward slashes
 	"{calib_param_path     |C:/Users/andre/Desktop/Glowcake Hoss/Calibrations/TestDecode/stereoCalibrationParameters_camAcamB.yml| Calibration_parameters            }"
-	"{exportPLY     |true| spend time creating a PLY image}"
+	"{exportPLY     |false| spend time creating a PLY image}"
 	"{@white_thresh     |<none>| The white threshold height (optional)}"
 	"{@black_thresh     |<none>| The black threshold (optional)}" };
 
@@ -255,6 +255,14 @@ int main(int argc, char** argv)
 	captured_pattern[1].resize(numberOfPatternImages); //CAM B
 
 	Mat color = imread(imagelist[numberOfPatternImages], IMREAD_COLOR); //This is the WHITE image taken from Camera A used as a COLOR REFERENCE for the scene
+
+	if (swapCameras) {
+		cout << "NOTE CAMERA SWAP COLOR REF" << endl;
+
+		color = imread(imagelist[2 * numberOfPatternImages + 2], IMREAD_COLOR); //This is the WHITE image taken from Camera A used as a COLOR REFERENCE for the scene
+
+	}
+	
 	Size imagesSize = color.size();
 
 	cout << "Loading Data Complete. Beginning Processing..." << endl;
@@ -303,9 +311,9 @@ int main(int argc, char** argv)
 	if (swapCameras) {
 		cout << "NOTE CAMERA SWAP BW IMAGES" << endl;
 		// Loading images (all white + all black) needed for shadows computation
-		cvtColor(color, whiteImages[1], COLOR_RGB2GRAY); // White image, Camera A
+		cvtColor(color, whiteImages[0], COLOR_RGB2GRAY); // White image, Camera A
 
-		whiteImages[0] = imread(imagelist[2 * numberOfPatternImages + 2], IMREAD_GRAYSCALE);
+		whiteImages[1] = imread(imagelist[numberOfPatternImages], IMREAD_GRAYSCALE);
 		blackImages[1] = imread(imagelist[numberOfPatternImages + 1], IMREAD_GRAYSCALE);
 		blackImages[0] = imread(imagelist[2 * numberOfPatternImages + 2 + 1], IMREAD_GRAYSCALE);
 	}
