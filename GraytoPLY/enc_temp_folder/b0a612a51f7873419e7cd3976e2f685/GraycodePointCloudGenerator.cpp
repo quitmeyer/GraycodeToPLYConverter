@@ -405,9 +405,9 @@ int main(int argc, char** argv)
 		cout << "Rectifying images..." << endl;
 
 
-		/* // We moved this code to be built in to the calibration code, so it doesn't need to run fresh every single time you want to decode a structured light image.
+		/* // We moved this code to be built in to the calibration code, so it doesn't need to run fresh every single time you want to decode a structured light image. 
 		*   //Instead the stereo calibration is done elsewhere and the parameters are passed here
-
+		
 		Rect validRoi[2];
 		//cout << "R before Stereorectify" << R << "  T before "<<T<< endl;
 		stereoRectify(camAintrinsics, camAdistCoeffs, camBintrinsics, camBdistCoeffs, imagesSize, R, T, R1, R2, P1, P2, Q, CALIB_ZERO_DISPARITY,
@@ -484,7 +484,7 @@ int main(int argc, char** argv)
 		//max = 284;
 		//min = -312; // these are arbitrary numbers that seem to be more around the actual scale
 
-		convertScaleAbs(disparityMap, scaledDisparityMap, 255 / (max - min));// TODO !!!! for some reason our color map shoudl look rainbow like, but is just barely visiable as blue. our scaling must be wrong
+		convertScaleAbs(disparityMap, scaledDisparityMap, 255 / (max - min));// TODO for some reason our color map shoudl look rainbow like, but is just barely visiable as blue. our scaling must be wrong
 		//disparityMap.copyT312o(scaledDisparityMap);
 		//scaledDisparityMap.convertTo(scaledDisparityMap, CV_8UC1);
 		applyColorMap(scaledDisparityMap, cm_disp, COLORMAP_RAINBOW);
@@ -493,6 +493,8 @@ int main(int argc, char** argv)
 		imshow("cm disparity m", cm_disp);
 		waitKey(1);
 		imwrite(outputFolder + "/" + "cm disparity m" + ".png", cm_disp);
+
+
 
 		// Compute the point cloud
 		Mat pointCloud;
@@ -504,19 +506,22 @@ int main(int argc, char** argv)
 
 		cout << endl << "  Image Reprojected to 3D  " << endl;
 
-		// maybe perspectiveTransform is what is necessary to reproject the projector????
+		// maybe perspectiveTransform is what is necessary to reproject the projector?
+
 
 		// Compute a mask to remove background
 		Mat dst, thresholded_disp;
 		threshold(scaledDisparityMap, thresholded_disp, 0, 255, THRESH_OTSU + THRESH_BINARY); // OTSU calculates some kind of optimal threshold, then binary just sends up to black or white
-
 		resize(thresholded_disp, dst, Size(640 * 2, 480 * 2), 0, 0, INTER_LINEAR_EXACT);
+		//TODO make sure the mask we created  via the Scaled Disparity Map is good
+
+
 		imshow("threshold disp otsu", dst);
 		waitKey(1);
 		// Apply the mask to the point cloud
 		Mat pointcloud_tresh, color_tresh;
 
-		pointCloud.copyTo(pointcloud_tresh, thresholded_disp);
+		pointCloud.copyTo(pointcloud_tresh, thresholded_disp); // This applies a thresholded mask on the pointcloud, but honestly i don't see a difference
 		//pointCloud.copyTo(pointcloud_tresh);
 		color.copyTo(color_tresh, thresholded_disp);
 
@@ -542,10 +547,11 @@ int main(int argc, char** argv)
 			cout << endl << "  Finished Exporting PLY  " << endl;
 		}
 
-		/*
-		................Reprojections.....................
-		//Try to reproject  Canonical Camera's points to examine calibration and for sanity checking
+
+		/*		Reprojections
+		//Try to reproject  Canonical Camera's points to examine calibration
 		*/
+
 
 		//Canonical Camera
 		bool calcCanonCamA = true;
@@ -576,6 +582,11 @@ int main(int argc, char** argv)
 			float depth = 9;
 			//const float* input = pointcloud_tresh.ptr<float>(0);
 
+
+
+
+
+
 			//Loop through the pointcloud to gather corresponding pairs between
 			//-all the image points (x,y)
 			//	-All the detected object points (X,Y,Z) (I think the XY are different than the x,y of the pixels
@@ -583,8 +594,6 @@ int main(int argc, char** argv)
 			//Remember Points and Size go (x,y); (width,height) ,- Mat has ( row, col).
 
 			cout << "Starting Pointcloud Loop" << endl;
-
-			//TODO NOTE TO MATT - Maybe i screwed something up in reading these points slightly? but we get so close it seems it must be something in the reproject`	
 
 			for (int i = 0; i < pointcloud_tresh.rows; i++)
 			{
@@ -630,12 +639,16 @@ int main(int argc, char** argv)
 				} // pointcloud cols
 			}//pointcloud rows
 
+
+
 			cout << endl << "min depth  " << minDepth << "   maxDepth " << maxDepth << endl;
+
 
 			processedImagePointsP.push_back(imagePoints); // Do we ever really need the image points past here, i don't think so
 			processedobjectPointsP.push_back(objectPointsP);
 
 			Mat rvecs0 = Mat::eye(3, 3, CV_64F);
+
 			Mat tvecs0 = Mat::zeros(3, 1, CV_64F);
 			cout << endl << " Prep reproject into canon cam  " << "\n" << "Camera Matrix Canon " << "\n" << camAintrinsics << "\n" << "  rvecs " << "\n" << rvecs0 << "\n" << "  Tvecs " << "\n" << tvecs0 << endl;
 
@@ -647,6 +660,8 @@ int main(int argc, char** argv)
 
 			/// Take pointcloud from reproject and look at those values, check the min max x coord  , min max y, min max z, compared pointcloud with the disparity from graycode-decode
 
+
+
 			//Project Through Camera A (Canonical)
 			projectPoints(processedobjectPointsP.front(), rvecs0, tvecs0, camAintrinsics, camAdistCoeffs, CanonImagePoints);// 
 
@@ -657,8 +672,6 @@ int main(int argc, char** argv)
 
 
 			// visualize the reprojection Canon Cam A
-
-			//NOTE FOR MATT - Maybe this is also a place i screwed something up? but again seems a deeper problem
 			Mat projIM(whiteImages[0].rows, whiteImages[0].cols, CV_8UC3, Scalar(10, 10, 40));
 			for (int i = 0; i < CanonImagePoints.size(); i++) {
 
@@ -709,13 +722,7 @@ int main(int argc, char** argv)
 			imwrite(outputFolder + "/" + "CAMB reproject Image" + ".png", projIMB);
 
 
-
-			/*		//Try to calculate PROJECTOR's Intrinsic and Extrinsic matrix using the calibrate camera function in reverse */
-
-			//PROJECTOR PROJECTIONS
-			//Calculate the projector's position and try to reproject the images from the project's POV
-
-			//Note for matt, even when our camera projections have gotten close, our projector projection has always looked like garbage!
+			//Calc Projector
 			cout << endl << " Calculating projector position " << endl;
 
 			Mat distCoeffsP;
@@ -752,6 +759,8 @@ int main(int argc, char** argv)
 			//Run calibrate camera to try to get the intrinsics and extrinsics of the projector
 			calibrateCamera(processedobjectPointsP, processedImagePointsP, imageSizeP, cameraMatrixG, distCoeffsP, rvecsP, tvecsP, CALIB_USE_INTRINSIC_GUESS);
 
+
+
 			cout << "Projector Camera Matrix after calibration " << "\n" << cameraMatrixG << "\n" << "  rvecs " << "\n" << rvecsP.front() << "\n" << "  Tvecs " << "\n" << tvecsP.front() << endl;
 
 			//Try to project the points and see what we see from the projector's point of view
@@ -759,13 +768,14 @@ int main(int argc, char** argv)
 			//Mat projimagePoints2;
 			projectPoints(processedobjectPointsP.front(), rvecsP.front(), tvecsP.front(), cameraMatrixG, distCoeffsP, projimagePoints2);
 
-			//Visualize the points of the Projector
+
 			Mat projIMprojector(blackImages[0].rows, blackImages[0].cols, CV_8UC3, Scalar(10, 10, 40));
 			for (int i = 0; i < projimagePoints2.size(); i++) {
 
 
 				int x = projimagePoints2[i].x; // note this is rounding the values we are actually getting into integer pixel values
 				int y = projimagePoints2[i].y;
+
 
 				Vec3b color;
 				color[0] = 110;
@@ -775,11 +785,178 @@ int main(int argc, char** argv)
 				if (x > 0 && x < projIMprojector.cols && y>0 && y < projIMprojector.rows) {
 					projIMprojector.at<Vec3b>(y, x) = color; // mats are always ROW, COL,
 				}
+
+
 			}
 			namedWindow("Project Points Projector image", WINDOW_NORMAL);
 			resizeWindow("Project Points Projector image", 600, 600);
 			imshow("Project Points Projector image", projIMprojector);
 
+
+		}
+
+
+		/*		//Try to calculate PROJECTOR's Intrinsic and Extrinsic matrix using the calibrate camera function in reverse */
+
+		bool calcProj = false;
+
+		if (calcProj) {
+			cout << endl << " Calculating projector position " << endl;
+
+			Mat  distCoeffsP;
+			float aspectRatio = 16 / 9.0;
+
+
+			//Set intial guess for camera matrix
+
+			Mat cameraMatrixG;
+			cameraMatrixG = Mat::eye(3, 3, CV_32FC1);
+			float w = params.width; // projector w
+			float h = params.height; // projector h
+			float diagnonalFOV = dFOV;
+
+
+			///Building a guess from our measured fields of view of the projectors
+
+			//1920 x 1080  big projector 35.1	    0.6126105675
+		   // 1366 x 768 small projector 72.88	1.271995959
+
+
+			float d = sqrt(powf(w, 2) + powf(h, 2));
+			float f = (d / 2) * cos(diagnonalFOV / 2) / sin(diagnonalFOV / 2);  // old guess  1.732; // 1.732 = cotangent(1.0472/2) where 1.0472 is 60 degrees in radians)
+
+			cameraMatrixG.at< float >(0, 0) = f;
+			cameraMatrixG.at< float >(1, 1) = f;
+			cameraMatrixG.at< float >(0, 2) = w / 2; // assume it's about in the center
+			cameraMatrixG.at< float >(1, 2) = h / 2; // assume it's about in the center
+
+			cout << endl << " Initial Guess at Camera Matrix Intrinsics " << "\n" << "Camera Matrix " << "\n" << cameraMatrixG << endl;
+
+
+			vector<Mat> rvecsP, tvecsP;
+			double repError1;
+			// Size imageSizeP = Size(params.width, params.height);
+
+			Size imageSizeP = Size(pointcloud_tresh.cols, pointcloud_tresh.rows);
+
+			Point projPixelA; //= new Point(0.0, 0.0);
+
+			std::vector<std::vector<cv::Vec2f>> processedImagePointsP;
+			vector<cv::Vec2f> imagePoints;
+			cv::Vec2f apoint;
+
+			std::vector<std::vector<cv::Point3f>> processedobjectPointsP;
+			std::vector<cv::Point3f> objectPointsP;
+
+
+
+
+
+			// const float* pData = pointcloud_tresh.ptr<float>(0);
+			 //float* input = (float*)(pointcloud_tresh.data);
+			const float* input = pointcloud_tresh.ptr<float>(0);
+			//Remember Points and Size go (x,y); (width,height) ,- Mat has (row,col).
+			for (int i = 0; i < pointcloud_tresh.rows; i++)
+			{
+				for (int j = 0; j < pointcloud_tresh.cols; j++)
+				{
+					bool error = graycode->getProjPixel(captured_pattern[0], j, i, projPixelA); //Get pixel based on view of first camera
+					if (error) {
+						// cout << endl << " Error Pixel no pattern here  i" << i <<"  j "<<j<< endl;
+
+					}
+					else // Pattern  was sucessfully detected here
+					{
+
+						// float x = input[pointcloud_tresh.step * j + i];
+						 //float y = input[pointcloud_tresh.step * j + i + 1];
+						 //float z = input[pointcloud_tresh.step * j + i + 2];
+
+
+
+						float x = pointcloud_tresh.at<Vec3f>(i, j)[0];
+						float y = pointcloud_tresh.at<Vec3f>(i, j)[1];
+						float z = pointcloud_tresh.at<Vec3f>(i, j)[2];
+						//  cout << endl << " almost Good Pixel at  i " << i <<"  j "<<j<< "  x " << x << "  y " << y << "  z " << z << endl;
+
+						if (x == 0 && y == 0 && z == 0) { // skip empty points
+						}
+						else {
+							//? Any sucess?
+						   // cout << endl << " Good Pixel at  i" << i << "  j " << j << "  x " << x << "  y " << y << "  z " << z << endl;
+
+
+							//Get the Image Pixel points
+							cv::Vec2f apoint;
+							imagePoints.push_back(cv::Vec2f(projPixelA.x, projPixelA.y));
+
+
+
+							//pointcloud_tresh.at<cv::Vec3b>(i, j)[0];
+
+						   // img.at<cv::Vec3b>(i, j)[0]
+
+
+							//unsigned char b = input[img.step * j + i];
+							//unsigned char g = input[img.step * j + i + 1];
+							//unsigned char r = input[img.step * j + i + 2];
+
+							//get the point cloud loaded
+							//objectPointsP.push_back(pointcloud_tresh.at<Point3f>(i, j));
+
+							objectPointsP.push_back(cv::Point3f(x, y, z));
+						}
+					}
+				}
+			}
+
+			processedImagePointsP.push_back(imagePoints);
+			processedobjectPointsP.push_back(objectPointsP);
+			// Mat processedImagePointsP;
+			// disparityMap.copyTo(processedImagePointsP);
+
+			calibrateCamera(processedobjectPointsP, processedImagePointsP, imageSizeP, cameraMatrixG, distCoeffsP, rvecsP, tvecsP, CALIB_USE_INTRINSIC_GUESS);
+			//       calibrateCamera(processedobjectPointsP, processedImagePointsP, imageSizeP, cameraMatrixP, distCoeffsP, rvecsP, tvecsP);
+
+
+			Mat rvecs0 = rvecsP[0];
+			Mat tvecs0 = tvecsP[0];
+			cout << endl << " Calibrate Camera Points  " << "\n" << "Camera Matrix " << "\n" << cameraMatrixG << "\n" << "  rvecs " << "\n" << rvecs0 << "\n" << "  Tvecs " << "\n" << tvecs0 << endl;
+
+			//Try to project the points and see what we see from the projector's point of view
+			std::vector<cv::Point2f> projimagePoints2;
+			//Mat projimagePoints2;
+			projectPoints(processedobjectPointsP.front(), rvecsP.front(), tvecsP.front(), cameraMatrixG, distCoeffsP, projimagePoints2);
+			//cout << endl << " projImagepoints!  " << endl << projimagePoints2 << endl;
+
+			//Visualize the projection
+			//Against the original?
+
+			//Mat projIM;
+		   // disparityMap.copyTo(projIM); // 32fc1
+
+			Mat projIM(blackImages[0].rows, blackImages[0].cols, CV_8UC3, Scalar(10, 10, 40));
+			for (int i = 0; i < projimagePoints2.size(); i++) {
+
+
+				int x = projimagePoints2[i].x; // note this is rounding the values we are actually getting into integer pixel values
+				int y = projimagePoints2[i].y;
+
+
+				Vec3b color;
+				color[0] = 110;
+				color[1] = 255;
+				color[2] = 0;
+
+				if (x > 0 && x < projIM.cols && y>0 && y < projIM.rows) {
+					projIM.at<Vec3b>(y, x) = color; // mats are always ROW, COL,
+				}
+
+
+			}
+			namedWindow("Project Points Projector image", WINDOW_NORMAL);
+			resizeWindow("Project Points Projector image", 600, 600);
+			imshow("Project Points Projector image", projIM);
 		}
 	}
 
