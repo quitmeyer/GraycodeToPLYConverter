@@ -400,7 +400,7 @@ int main(int argc, char** argv)
 
 
 	// Stereo rectify IMAGES
-	bool rectify = false; //Toggle in case you don't want to rectify the images
+	bool rectify = true; //Toggle in case you don't want to rectify the images
 	if (rectify) {
 		cout << "Rectifying images..." << endl;
 
