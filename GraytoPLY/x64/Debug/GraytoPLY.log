@@ -11,8 +11,8 @@ C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCl
           [
               _Tp=uchar
           ]
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(624,18): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(635,63): warning C4244: 'argument': conversion from '_Tp' to '_Tp', possible loss of data
+C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(645,18): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(656,63): warning C4244: 'argument': conversion from '_Tp' to '_Tp', possible loss of data
           with
           [
               _Tp=int
@@ -21,7 +21,7 @@ C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCl
           [
               _Tp=float
           ]
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(635,49): warning C4244: 'argument': conversion from '_Tp' to '_Tp', possible loss of data
+C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(656,49): warning C4244: 'argument': conversion from '_Tp' to '_Tp', possible loss of data
           with
           [
               _Tp=int
@@ -30,91 +30,58 @@ C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCl
           [
               _Tp=float
           ]
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(679,11): warning C4244: 'initializing': conversion from '_Tp' to 'int', possible loss of data
+C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(696,11): warning C4244: 'initializing': conversion from '_Tp' to 'int', possible loss of data
           with
           [
               _Tp=float
           ]
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(680,11): warning C4244: 'initializing': conversion from '_Tp' to 'int', possible loss of data
+C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(697,11): warning C4244: 'initializing': conversion from '_Tp' to 'int', possible loss of data
           with
           [
               _Tp=float
           ]
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(681,11): warning C4244: 'initializing': conversion from '_Tp' to 'int', possible loss of data
+C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(698,11): warning C4244: 'initializing': conversion from '_Tp' to 'int', possible loss of data
           with
           [
               _Tp=float
           ]
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(685,75): warning C4244: '=': conversion from 'double' to '_Tp', possible loss of data
+C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(702,75): warning C4244: '=': conversion from 'double' to '_Tp', possible loss of data
           with
           [
               _Tp=uchar
           ]
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(704,11): warning C4244: 'initializing': conversion from '_Tp' to 'int', possible loss of data
+C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(721,11): warning C4244: 'initializing': conversion from '_Tp' to 'int', possible loss of data
           with
           [
               _Tp=float
           ]
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(705,11): warning C4244: 'initializing': conversion from '_Tp' to 'int', possible loss of data
+C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(722,11): warning C4244: 'initializing': conversion from '_Tp' to 'int', possible loss of data
           with
           [
               _Tp=float
           ]
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(706,11): warning C4244: 'initializing': conversion from '_Tp' to 'int', possible loss of data
+C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(723,11): warning C4244: 'initializing': conversion from '_Tp' to 'int', possible loss of data
           with
           [
               _Tp=float
           ]
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(710,52): warning C4244: '=': conversion from 'double' to '_Tp', possible loss of data
+C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(727,52): warning C4244: '=': conversion from 'double' to '_Tp', possible loss of data
           with
           [
               _Tp=uchar
           ]
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(729,32): warning C4305: 'initializing': truncation from 'double' to 'float'
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(735,12): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(736,12): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(737,23): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(776,11): warning C4244: 'initializing': conversion from '_Tp' to 'int', possible loss of data
+C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(752,32): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(758,12): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(759,12): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(760,23): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(797,11): warning C4244: 'initializing': conversion from '_Tp' to 'int', possible loss of data
           with
           [
               _Tp=float
           ]
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(777,11): warning C4244: 'initializing': conversion from '_Tp' to 'int', possible loss of data
+C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(798,11): warning C4244: 'initializing': conversion from '_Tp' to 'int', possible loss of data
           with
           [
               _Tp=float
           ]
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(807,32): warning C4305: 'initializing': truncation from 'double' to 'float'
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(814,12): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(815,12): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(816,23): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(891,64): warning C4244: 'argument': conversion from '_Tp' to '_Tp', possible loss of data
-          with
-          [
-              _Tp=int
-          ]
-          and
-          [
-              _Tp=float
-          ]
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(891,50): warning C4244: 'argument': conversion from '_Tp' to '_Tp', possible loss of data
-          with
-          [
-              _Tp=int
-          ]
-          and
-          [
-              _Tp=float
-          ]
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(942,11): warning C4244: 'initializing': conversion from '_Tp' to 'int', possible loss of data
-          with
-          [
-              _Tp=float
-          ]
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(943,11): warning C4244: 'initializing': conversion from '_Tp' to 'int', possible loss of data
-          with
-          [
-              _Tp=float
-          ]
-C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(837,11): warning C4101: 'repError1': unreferenced local variable
   GraytoPLY.vcxproj -> C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\x64\Debug\GraytoPLY.exe
