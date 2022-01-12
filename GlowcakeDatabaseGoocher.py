@@ -36,6 +36,7 @@ import sys
 import sqlite3
 import numpy as np
 import csv
+import shutil
 
 IS_PYTHON3 = sys.version_info[0] >= 3
 
@@ -232,10 +233,9 @@ class COLMAPDatabase(sqlite3.Connection):
         qvec = np.asarray(qvec, dtype=np.float64)
         tvec = np.asarray(tvec, dtype=np.float64)
         self.execute(
-            "INSERT INTO two_view_geometries VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO two_view_geometries VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             (pair_id,) + matches.shape + (array_to_blob(matches), config,
-             array_to_blob(F), array_to_blob(E), array_to_blob(H),
-             array_to_blob(qvec), array_to_blob(tvec)))
+             array_to_blob(F), array_to_blob(E), array_to_blob(H)))
 
     
 
@@ -253,7 +253,9 @@ def example_usage():
 
     args = parser.parse_args()
 
-    if os.path.exists(args.db):
+    shutil.copy(args.db,args.db+"new.db")
+
+    if os.path.exists(args.db+"new.db"):
         print("Good! database path already exists -- .")
         print("let's fuck it up")
     #    return
@@ -265,8 +267,8 @@ def example_usage():
 
     
     # Open the database.
-
-    db = COLMAPDatabase.connect(args.db)
+    
+    db = COLMAPDatabase.connect(args.db+"new.db")
     print("database opened")
 
     # For convenience, try creating all the tables upfront.
@@ -308,8 +310,6 @@ def example_usage():
         print(i[0])
         camB_image_id = i[0]
 
-    
-
 
 #~~~~ CREATE CAMERA OBJECT FOR PROJECTOR ~~~~~~~~~~~~~
 
@@ -349,7 +349,7 @@ def example_usage():
 
     # Create Graycode Match images.
     
-    proj_image_id = db.add_image("extras/small_projector_gradient_1366.png", p_camera_id1) #fake graycode from projector
+    proj_image_id = db.add_image("projector/white1366.png", p_camera_id1) #fake graycode from projector
     #camA_image_id = db.add_image("extras/CamB_WB_1.png", 1)     #view of Black image from graycode in CAMA
     #camB_image_id = db.add_image("extras/CamA_WB_1.png", 2)     #view of black image graycode in CAMB //Note the cameras are flipped
 
@@ -407,7 +407,7 @@ def example_usage():
             rowsB.append(row)
   
     # get total number of rows
-        print("Total no. of rows: %d"%(csvreaderB.line_num))
+        print("Total no. of rows (Cam B): %d"%(csvreaderB.line_num))
         totalRowsB = csvreaderB.line_num
     # printing the field names
     print('Field names are:' + ', '.join(field for field in fieldsB))
@@ -440,6 +440,8 @@ def example_usage():
 
     #------------Add keypoints-------------------
 
+    #--------------A-------------------
+    #add keypoints for Camera A canon image
     print("\n List Canonical Camera A Keypoints \n -----  ")  
 
     canonCamAKeypoints = db.execute("SELECT * from keypoints where image_id='"+str(camA_image_id)+"'")
@@ -447,13 +449,13 @@ def example_usage():
     #     print("\n canonical Camera A  ")  
          #print(i)
     image_id, rows, cols, keypointblob = next(canonCamAKeypoints)
-    keypointarray = np.frombuffer(keypointblob, np.float32).reshape(rows, cols)
+    keypointarrayA = np.frombuffer(keypointblob, np.float32).reshape(rows, cols)
 
-    print(keypointarray.shape)
+    print(keypointarrayA.shape)
     print("last index of orignal keypoints ")
-    canCamKeypointsOrigIndex =keypointarray.shape[0] -1
-    print(canCamKeypointsOrigIndex)
-    print(keypointarray)
+    canCamAKeypointsOrigIndex =keypointarrayA.shape[0] -1
+    print(canCamAKeypointsOrigIndex)
+    print(keypointarrayA)
 
     print("Augmented keypoints ")
     #add the keypoints
@@ -463,25 +465,25 @@ def example_usage():
     print("cKeysA ")
     print(cKeysA)
     print(cKeysA.shape)
-    numofKeypointsAdded=cKeysA.shape[0]
+    numofKeypointsAddedA=cKeysA.shape[0]
     #empty_array = np.empty((cKeysA.shape[0], 4), np.float32)
     ones_array = np.ones((cKeysA.shape[0], 4), np.float32)
     
     cKeysA = np.append(cKeysA,ones_array,axis=1)
     print(cKeysA.shape)
     #augmentedKeypointArray = np.append(keypointarray,np.asarray([[1,2,3,4,5,6]],np.float32) ) #EXAMPLE
-    augmentedKeypointArray = np.append(keypointarray,cKeysA)
+    augmentedKeypointArrayA = np.append(keypointarrayA,cKeysA)
 
 
     #reshape it back how the database likes it
-    augmentedKeypointArray =augmentedKeypointArray.reshape(rows+numofKeypointsAdded,cols)
+    augmentedKeypointArrayA =augmentedKeypointArrayA.reshape(rows+numofKeypointsAddedA,cols)
     print("Keypoints data array augmented")
 
-    augmentedKeypointArray = np.asarray(augmentedKeypointArray, np.float32)
-    print(augmentedKeypointArray.shape)
+    augmentedKeypointArrayA = np.asarray(augmentedKeypointArrayA, np.float32)
+    print(augmentedKeypointArrayA.shape)
 
     #put those keypoints into that database!
-    data_tuple = (camA_image_id, augmentedKeypointArray.shape[0], augmentedKeypointArray.shape[1],array_to_blob(augmentedKeypointArray))
+    data_tuple = (camA_image_id, augmentedKeypointArrayA.shape[0], augmentedKeypointArrayA.shape[1],array_to_blob(augmentedKeypointArrayA))
 
     canonCamA = db.execute("INSERT or REPLACE INTO keypoints (image_id, rows, cols, data) VALUES (?, ?, ?, ?)",data_tuple)
 
@@ -493,9 +495,7 @@ def example_usage():
     #cKeysA = -2160+cKeysA
     #print(cKeysA)
     
-    #dummy test
-    keypoints1 = np.random.rand(3, 2) * (100, 200)
-
+  
     #db.add_keypoints(camA_image_id, keypoints1)
 
     # Add placeholder scale, orientation.
@@ -505,27 +505,225 @@ def example_usage():
     #db.execute("INSERT INTO keypoints(image_id, rows, cols, data) VALUES(?, ?, ?, ?);",  (camA_image_id, keypoints1.shape[0], keypoints1.shape[1], keypoints_str))
 
 
-    #Graycode Keypoints for Projector (Projector to CAMERA A GRAYCODE Correspondences)
-    pKeysA=np.delete(rowsA,np.s_[0:2],1)
-    print("\npKeysA ")
-    print(pKeysA)
+    #---------B----------------
+    #repeat the process for Cam B
+    #Graycode Keypoints for Cam B
+    #add keypoints for Camera A canon image
+    print("\n List Canonical Camera B Keypoints \n -----  ")  
 
-    db.add_keypoints(proj_image_id, pKeysA) #add to the projector
+    #db.add_keypoints(camB_image_id, cKeysB)
+    canonCamBKeypoints = db.execute("SELECT * from keypoints where image_id='"+str(camB_image_id)+"'")
+    #for i in canonCamAKeypoints:
+    #     print("\n canonical Camera A  ")  
+         #print(i)
+    image_idB, bRows, bCols, keypointblobB = next(canonCamBKeypoints)
+    keypointarrayB = np.frombuffer(keypointblobB, np.float32).reshape(bRows, bCols)
 
+    print(keypointarrayB.shape)
+    print("last index of orignal keypoints ")
+    canCamBKeypointsOrigIndex =keypointarrayB.shape[0] -1
+    print(canCamBKeypointsOrigIndex)
+    print(keypointarrayB)
+
+    print("Augmented keypoints Cam B ")
+    #add the keypoints
 
     #Graycode Keypoints for Cam B
     cKeysB = np.delete(rowsB,np.s_[2:4],1)
     print("cKeysB ")
     print(cKeysB)
+    print(cKeysB.shape)
+    numofKeypointsAddedB=cKeysB.shape[0]
+    #empty_array = np.empty((cKeysA.shape[0], 4), np.float32)
+    ones_arrayB = np.ones((cKeysB.shape[0], 4), np.float32)
+    
+    cKeysB = np.append(cKeysB,ones_arrayB,axis=1)
+    print(cKeysB.shape)
+    augmentedKeypointArrayB = np.append(keypointarrayB,cKeysB)
 
-    #db.add_keypoints(camB_image_id, cKeysB)
 
+    #reshape it back how the database likes it
+    augmentedKeypointArrayB =augmentedKeypointArrayB.reshape(bRows+numofKeypointsAddedB,bCols)
+    print("Keypoints data array augmented")
+
+    augmentedKeypointArrayB = np.asarray(augmentedKeypointArrayB, np.float32)
+    print(augmentedKeypointArrayB.shape)
+
+    #put those keypoints into that database!
+    data_tupleB = (camB_image_id, augmentedKeypointArrayB.shape[0], augmentedKeypointArrayB.shape[1],array_to_blob(augmentedKeypointArrayB))
+
+    canonCamB = db.execute("INSERT or REPLACE INTO keypoints (image_id, rows, cols, data) VALUES (?, ?, ?, ?)",data_tupleB)
+
+
+    #--------------P------------------
+    # adding keypoints for Projector camera
+    print("~~ adding keypoints for the Projector ~~~ ")
+
+    #Graycode Keypoints for Projector (Projector to CAMERA A GRAYCODE Correspondences)
+    pKeysA=np.delete(rowsA,np.s_[0:2],1)
+    print("\npKeysA ")
+    print(pKeysA)
+
+    #db.add_keypoints(proj_image_id, pKeysA) #add to the projector
 
     pKeysB=np.delete(rowsB,np.s_[0:2],1)
     print("\npKeysB ")
     print(pKeysB)
+    
+    pKeysA_pKeysB = np.vstack((pKeysA,pKeysB))  #have to use vstack and put in double parentheses for some weird reason
 
-    #db.add_keypoints(proj_image_id, pKeysB) #add to the projector from B  #gives errrrror
+    print("\npKeysA and B ")
+    print(pKeysA_pKeysB)
+
+    db.add_keypoints(proj_image_id, pKeysA_pKeysB) #have to add both at once
+
+
+
+
+    # -------- Add to matches and  two_view_geometries ----------
+
+    # testing on how to get TWO VIEW GEOM into a variable
+    '''
+    camAcamBpairID = image_ids_to_pair_id(camA_image_id,camB_image_id)
+    camAcamBTwoViewGeometries = db.execute("SELECT * from two_view_geometries where pair_id='"+str(camAcamBpairID)+"'")
+
+    pair_id, rowsTVG, colsTVG, blobTVG, configTVG, F, E, H = next(camAcamBTwoViewGeometries)
+    TVGarray = np.frombuffer(blobTVG, np.int32).reshape(rowsTVG, colsTVG)
+
+    print(TVGarray.shape)
+    print("TVGarray:")
+    print(TVGarray)
+   
+    ProCamATVGarray = np.empty((0,TVGarray.shape[1]), int)
+    #ProCamATVGarray = np.ones((3, TVGarray.shape[1]), np.int32) # rows and cols - cols will be 2
+    ProCamATVGarray = np.append(ProCamATVGarray, np.array([[100,2000]]), axis=0)
+    '''
+    
+    #CAM A - PROJ
+    # create the indices of aligned matches between CAM A and PROJ
+    arrA = np.arange(canCamAKeypointsOrigIndex, canCamAKeypointsOrigIndex+numofKeypointsAddedA, 1)
+    arrP_A = np.arange(0,numofKeypointsAddedA, 1)
+
+    matches_CA_P = np.array([arrA,arrP_A])
+
+    print("matches_CA_P:")
+    print(matches_CA_P.shape)
+    print(matches_CA_P)
+    matches_CA_P =matches_CA_P.T #have to transpose it
+    print(matches_CA_P.shape)
+    print(matches_CA_P)
+
+    #db.add_matches(camA_image_id,proj_image_id,matches_CA_P)
+    #db.update_two_view_geometries( matches_CA_P, image_ids_to_pair_id(camA_image_id,proj_image_id))
+    db.add_two_view_geometry(camA_image_id,proj_image_id,matches_CA_P)
+
+    #CAM B - PROJ
+    # create the indices of aligned matches between CAM A and PROJ
+    arrB = np.arange(canCamBKeypointsOrigIndex, canCamBKeypointsOrigIndex+numofKeypointsAddedB, 1)
+    arrP_B = np.arange(numofKeypointsAddedA,numofKeypointsAddedA+ numofKeypointsAddedB, 1) #the keypoints for the projector for camB were appended to the projector's list of keypoints
+    #NOTE possible off-by-one error above
+
+    matches_CB_P = np.array([arrB,arrP_B])
+
+    print("matches_CB_P:")
+    print(matches_CB_P.shape)
+    print(matches_CB_P)
+    matches_CB_P =matches_CB_P.T #have to transpose it
+    print(matches_CB_P.shape)
+    print(matches_CB_P)
+
+
+    db.add_two_view_geometry(camB_image_id,proj_image_id,matches_CB_P)
+
+
+    #CAM A - CAM B
+    # create the indices of aligned matches between CAM A and CAM B
+
+    matchRowBinA = np.where((pKeysB == pKeysA[0]).all(axis=1))
+    print("Search pkeysB for matches with a row in pKeysA") 
+    print(matchRowBinA)
+    print(matchRowBinA[0])
+    print(len(matchRowBinA[0]))
+    matchRowAB2 = np.where((pKeysB == pKeysA[140]).all(axis=1))
+    print("Search pkeysB for matches with a row in pKeysA") 
+    print(matchRowAB2)
+
+    matchedrows = np.vstack((matchRowBinA,matchRowAB2))
+    print(matchedrows)
+    
+    newMatchedRowsAtoB = np.array([[0,1],[2,3]]) # [0,1] #np.array([0,1])
+   # print(newMatchedRowsAtoB)
+
+    print("~~~Matching rows in B to those in A~~~~")
+    for indexA, pkeyArow in enumerate(pKeysA):
+        #print(pkeyArow)
+        matchRowBinA = np.where((pKeysB == pkeyArow).all(axis=1))
+        if(len(matchRowBinA[0])!=0):
+            print("match? pkeyArow | pkeyArow index | pKeysB[matchrowBinA] |  matchrowBinA")
+            print(pkeyArow)
+            print(indexA)
+            print(pKeysB[matchRowBinA])
+            print(matchRowBinA)
+            #connect all those indices together
+            #print(newMatchedRowsAtoB)
+
+            for rowB in matchRowBinA[0]:
+                newrow= [indexA,rowB]
+                newMatchedRowsAtoB = np.vstack([newMatchedRowsAtoB, newrow])
+            print("newmatchedRows")
+            print(newMatchedRowsAtoB)
+
+        #print("Search pkeysB for matches with a row in pKeysA") 
+        #print(matchRowAB)
+        #xy = np.where(pKeysB == pkeyArow)
+        #print("Search pkeysB for matches with pKeysA") 
+        #print(xy)
+        #linksxy = np.where(xy[1] == xy[0])
+        #print(linksxy)
+    print("Total Matched Rows between") 
+    print(newMatchedRowsAtoB)
+
+
+    #TODO
+    #then call bundle adjuster?
+    #run the mapper in a special way   --Mapper.filter_max_reproj_error arg (=4)   (use special arguments )
+
+    '''
+    args.extract = False  # skip feature extraction
+    args.match = False  # skip matching
+    args.update_matches = True
+    args.map = True
+    args.update_two_view_geometries = True
+    args.triangulate = True
+    args.bundle_adjust = True
+    args.num_threads = "1"
+    args.ba_local_max_num_iterations = "30"
+    args.ba_local_max_refinements = "3"
+    args.ba_global_max_num_iterations = "75"
+    args.min_num_matches = "1"
+    args.ignore_two_view_tracks = "0"
+
+    #call to colmap mapper
+    def colmap_mapper(db_path, img_path, output_path, num_threads, ba_local_max_num_iterations, ba_local_max_refinements, ba_global_max_num_iterations):
+    # parameters for mapper correspond to defaults for
+    # high quality images when using automatic_reconstructor
+    # num_threads helps remove non determinism due to ceres multi-threading
+    cmd = 'colmap mapper' + \
+        ' --database_path ' + db_path + \
+        ' --image_path ' + img_path + \
+        ' --output_path ' + output_path + \
+
+
+
+    if args.map:
+        copyfile(current_db_path, env.mapped_db)
+        current_db_path = env.mapped_db
+        colmap_mapper(current_db_path, env.images_path, env.sparse_model_path, args.num_threads,
+                      args.ba_local_max_num_iterations, args.ba_local_max_refinements, args.ba_global_max_num_iterations)
+
+    '''
+
+
 
     '''
     #add matches
