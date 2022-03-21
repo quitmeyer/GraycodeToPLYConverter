@@ -37,6 +37,7 @@ import sqlite3
 import numpy as np
 import csv
 import shutil
+import pandas as pd
 
 IS_PYTHON3 = sys.version_info[0] >= 3
 
@@ -638,43 +639,44 @@ def example_usage():
 
     #CAM A - CAM B
     # create the indices of aligned matches between CAM A and CAM B
-   
-    #newMatchedRowsAtoB = np.array([[0,1],[2,3]]) # [0,1] #np.array([0,1])
-    newMatchedRowsAtoB = np.empty((0,2))
-    print(newMatchedRowsAtoB)
-    oldPkeyArow = []
-    print("~~~Matching rows in B to those in A~~~~")
-    for indexA, pkeyArow in enumerate(pKeysA):
-        #print(pkeyArow)
-        #if(np.array_equal(pkeyArow, oldPkeyArow)): #skip redundant matches from A to B? Could include this information manually, if the same point was already tested, and matched, then they will match to the same points
-        #    continue
-        matchRowBinA = np.where((pKeysB == pkeyArow).all(axis=1))
-        if(len(matchRowBinA[0])!=0):
-        #if(matchRowBinA[0].shape[0] == 0):
-            """ print("match? pkeyArow | pkeyArow index | pKeysB[matchrowBinA] |  matchrowBinA")
-            print(pkeyArow)
-            print(indexA)
-            print(pKeysB[matchRowBinA])
-            print(matchRowBinA) """
-            #connect all those indices together
-            #print(newMatchedRowsAtoB)
+    # replace with PANDAS
+    print("Starting Intersection of two dataframes with PANDAS") 
+    
+    dA = pd.DataFrame(pKeysA) 
+    therows, thecolumns = pKeysA.shape
+    idx_a =np.arange(0, therows, 1)
+    dA = dA.assign(idxA=idx_a)
+    print("dataframeA: ")
+    print(dA) 
 
-            for rowB in matchRowBinA[0]:
-                newrow= [indexA,rowB]
-                newMatchedRowsAtoB = np.vstack([newMatchedRowsAtoB, newrow])
-            print("newmatchedRowsAtoB")
-            print(newMatchedRowsAtoB) 
-        oldPkeyArow = pkeyArow
-        #print("Search pkeysB for matches with a row in pKeysA") 
-        #print(matchRowAB)
-        #xy = np.where(pKeysB == pkeyArow)
-        #print("Search pkeysB for matches with pKeysA") 
-        #print(xy)
-        #linksxy = np.where(xy[1] == xy[0])
-        #print(linksxy)
-    print("All Matched Rows between A to B") 
-    print(newMatchedRowsAtoB)
+    dB = pd.DataFrame(pKeysB)
+    therows, thecolumns = pKeysB.shape
+    idx_b =np.arange(0, therows, 1)
+    dB = dB.assign(idxB=idx_b)
+    print("dataframeB: ")
+    print(dB) 
 
+    # Calling merge() function 
+
+    int_dfAtoB = pd.merge(dA, dB, how ='inner', on =[0, 1]) 
+    int_dfBtoA = pd.merge(dA, dB, how ='inner', on =[0, 1]) 
+
+    print("All Matched Rows between A to B")    
+    print(int_dfAtoB)
+    print("Matched rows between B to A") 
+    print(int_dfBtoA)
+    #print("Remove redundant rows") 
+    #int_dfAtoB_noDups = int_dfAtoB.drop_duplicates()
+    #print(int_dfAtoB_noDups)
+    npAtoB = int_dfAtoB.to_numpy()
+    print(npAtoB)
+    idxs_A_B = np.delete(npAtoB,0,1) #kill first row
+    idxs_A_B = np.delete(idxs_A_B,0,1) #kill the new first row
+    print("these are the indices that correspond to matches from projA to projB")
+    print(idxs_A_B)
+
+
+    
 
     #TODO
     #then call bundle adjuster?
