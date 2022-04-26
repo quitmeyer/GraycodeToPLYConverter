@@ -719,7 +719,7 @@ def example_usage():
 
 
 
-    '''
+    
     #add matches
     print("add matches to A")
 
@@ -745,6 +745,17 @@ def example_usage():
     print(matches_CB_P)
     matches_CB_P =matches_CB_P.T #have to transpose it
     print(matches_CB_P.shape)
+
+    print("Adding Matches from A to B")
+    #arrB = np.arange(0, totalRowsB, 1)
+
+    matches_A_B = idxs_A_B
+    #print(matches_CB_P.shape)
+    #print(matches_CB_P)
+    #matches_CB_P =matches_CB_P.T #have to transpose it
+    print(matches_A_B.shape)
+    db.add_matches(camA_image_id, camB_image_id, matches_A_B) #WARNIGN #incorrect method of adding matches right now
+
 
     #db.add_matches(proj_image_id, camB_image_id, matches_CB_P) #incorrect method of adding matches right now
  
@@ -778,7 +789,7 @@ def example_usage():
     db.add_matches(image_id2, image_id3, matches23) """
 
     #~~~~~ Commit the data to the file.
-    '''
+    
     
     db.commit()
     print("saved db")
