@@ -659,12 +659,13 @@ def example_usage():
     # Calling merge() function 
 
     int_dfAtoB = pd.merge(dA, dB, how ='inner', on =[0, 1]) 
-    int_dfBtoA = pd.merge(dA, dB, how ='inner', on =[0, 1]) 
+    # int_dfBtoA = pd.merge(dA, dB, how ='inner', on =[0, 1])  # just double checking if direction matters
 
     print("All Matched Rows between A to B")    
     print(int_dfAtoB)
-    print("Matched rows between B to A") 
-    print(int_dfBtoA)
+    # print("Matched rows between B to A") # just double checking direction
+    # print(int_dfBtoA)
+
     #print("Remove redundant rows") 
     #int_dfAtoB_noDups = int_dfAtoB.drop_duplicates()
     #print(int_dfAtoB_noDups)
@@ -754,7 +755,63 @@ def example_usage():
     #print(matches_CB_P)
     #matches_CB_P =matches_CB_P.T #have to transpose it
     print(matches_A_B.shape)
-    db.add_matches(camA_image_id, camB_image_id, matches_A_B) #WARNIGN #incorrect method of adding matches right now
+    # db.add_matches(camA_image_id, camB_image_id, matches_A_B) #WARNIGN #incorrect method of adding matches right now #crashes everything
+
+    
+
+    #----------------------Adding Graycode Matches Canon A to B -----------
+    print("\n List Matches \n -----  ")  
+
+    #db.update_two_view_geometries(cam)
+    
+    ABpair_id = image_ids_to_pair_id(camA_image_id, camB_image_id)
+    canonCamAMatches = db.execute("SELECT * from matches where pair_id='"+str(ABpair_id)+"'")
+    print(canonCamAMatches)
+    thepair_id, rows, cols, matchesdataBlob = next(canonCamAMatches)
+    matchesarrayA = np.frombuffer(matchesdataBlob, np.float32).reshape(rows, cols)
+
+    print("pair id for canon cameras images")
+    print(thepair_id)
+    print(matchesarrayA.shape)
+    print("last index of orignal matches ")
+    matchesOrigIndex =matchesarrayA.shape[0] -1
+    print(matchesOrigIndex)
+    print(matchesarrayA)
+
+    print("_------------------ADDING -----Augmented Matches ---Hopefully ")
+    #add the keypoints
+    '''
+    #Graycode Keypoints for Cam A
+    cKeysA = np.delete(rowsA,np.s_[2:4],1)
+    print("cKeysA ")
+    print(cKeysA)
+    print(cKeysA.shape)
+    numofKeypointsAddedA=cKeysA.shape[0]
+    #empty_array = np.empty((cKeysA.shape[0], 4), np.float32)
+    ones_array = np.ones((cKeysA.shape[0], 4), np.float32)
+    
+    cKeysA = np.append(cKeysA,ones_array,axis=1)
+    print(cKeysA.shape)
+    #augmentedKeypointArray = np.append(keypointarray,np.asarray([[1,2,3,4,5,6]],np.float32) ) #EXAMPLE
+    augmentedKeypointArrayA = np.append(keypointarrayA,cKeysA)
+    '''
+    numofMatchesAddedA=matches_A_B.shape[0]
+
+    augmentedMatchesArrayA = np.append(matchesarrayA, matches_A_B)
+    print(augmentedMatchesArrayA.shape)
+
+    #reshape it back how the database likes it
+    augmentedMatchesArrayA =augmentedMatchesArrayA.reshape(rows+numofMatchesAddedA,cols)
+    print("Matches data array augmented")
+
+    augmentedMatchesArrayA = np.asarray(augmentedMatchesArrayA, np.float32)
+    print(augmentedMatchesArrayA.shape)
+
+    #put those keypoints into that database!
+    data_tuple = (ABpair_id, augmentedMatchesArrayA.shape[0], augmentedMatchesArrayA.shape[1],array_to_blob(augmentedMatchesArrayA))
+    
+    #put the full list of matches into the database
+    canonCamAMatches = db.execute("INSERT or REPLACE INTO matches (pair_id, rows, cols, data) VALUES (?, ?, ?, ?)",data_tuple)
 
 
     #db.add_matches(proj_image_id, camB_image_id, matches_CB_P) #incorrect method of adding matches right now
