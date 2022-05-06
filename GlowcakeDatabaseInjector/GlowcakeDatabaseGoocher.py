@@ -219,7 +219,7 @@ class COLMAPDatabase(sqlite3.Connection):
     def add_two_view_geometry(self, image_id1, image_id2, matches,
                               F=np.eye(3), E=np.eye(3), H=np.eye(3),
                               qvec=np.array([1.0, 0.0, 0.0, 0.0]),
-                              tvec=np.zeros(3), config=2):
+                              tvec=np.zeros(3), config=3): #note andy changed this from 2
         assert(len(matches.shape) == 2)
         assert(matches.shape[1] == 2)
 
