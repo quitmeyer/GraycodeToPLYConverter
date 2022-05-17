@@ -219,7 +219,7 @@ class COLMAPDatabase(sqlite3.Connection):
     def add_two_view_geometry(self, image_id1, image_id2, matches,
                               F=np.eye(3), E=np.eye(3), H=np.eye(3),
                               qvec=np.array([1.0, 0.0, 0.0, 0.0]),
-                              tvec=np.zeros(3), config=3): #note andy changed this from 2
+                              tvec=np.zeros(3), config=2): #note andy changed this from 2
         assert(len(matches.shape) == 2)
         assert(matches.shape[1] == 2)
 
@@ -457,6 +457,7 @@ def example_usage():
     canCamAKeypointsOrigIndex =keypointarrayA.shape[0] -1
     print(canCamAKeypointsOrigIndex)
     print(keypointarrayA)
+    print(keypointarrayA[canCamAKeypointsOrigIndex])
 
     print("Augmented keypoints ")
     #add the keypoints
@@ -495,15 +496,6 @@ def example_usage():
     cam_height = 2160
     #cKeysA = -2160+cKeysA
     #print(cKeysA)
-    
-  
-    #db.add_keypoints(camA_image_id, keypoints1)
-
-    # Add placeholder scale, orientation.
-    #keypoints = np.concatenate([keypoints, np.ones((n_keypoints, 1)), np.zeros((n_keypoints, 1))], axis=1).astype(np.float32)
-
-    #keypoints_str = keypoints1.tostring()
-    #db.execute("INSERT INTO keypoints(image_id, rows, cols, data) VALUES(?, ?, ?, ?);",  (camA_image_id, keypoints1.shape[0], keypoints1.shape[1], keypoints_str))
 
 
     #---------B----------------
@@ -583,22 +575,6 @@ def example_usage():
 
     # -------- Add to matches and  two_view_geometries ----------
 
-    # testing on how to get TWO VIEW GEOM into a variable
-    '''
-    camAcamBpairID = image_ids_to_pair_id(camA_image_id,camB_image_id)
-    camAcamBTwoViewGeometries = db.execute("SELECT * from two_view_geometries where pair_id='"+str(camAcamBpairID)+"'")
-
-    pair_id, rowsTVG, colsTVG, blobTVG, configTVG, F, E, H = next(camAcamBTwoViewGeometries)
-    TVGarray = np.frombuffer(blobTVG, np.int32).reshape(rowsTVG, colsTVG)
-
-    print(TVGarray.shape)
-    print("TVGarray:")
-    print(TVGarray)
-   
-    ProCamATVGarray = np.empty((0,TVGarray.shape[1]), int)
-    #ProCamATVGarray = np.ones((3, TVGarray.shape[1]), np.int32) # rows and cols - cols will be 2
-    ProCamATVGarray = np.append(ProCamATVGarray, np.array([[100,2000]]), axis=0)
-    '''
     
     #CAM A - PROJ
     # create the indices of aligned matches between CAM A and PROJ
@@ -616,7 +592,8 @@ def example_usage():
 
     #db.add_matches(camA_image_id,proj_image_id,matches_CA_P)
     #db.update_two_view_geometries( matches_CA_P, image_ids_to_pair_id(camA_image_id,proj_image_id))
-    db.add_two_view_geometry(camA_image_id,proj_image_id,matches_CA_P)
+    
+    #db.add_two_view_geometry(camA_image_id,proj_image_id,matches_CA_P) #temp disable
 
     #CAM B - PROJ
     # create the indices of aligned matches between CAM A and PROJ
@@ -634,94 +611,10 @@ def example_usage():
     print(matches_CB_P)
 
 
-    db.add_two_view_geometry(camB_image_id,proj_image_id,matches_CB_P)
+    #db.add_two_view_geometry(camB_image_id,proj_image_id,matches_CB_P) #temporarily disabled this for now
 
-
-    #CAM A - CAM B
-    # create the indices of aligned matches between CAM A and CAM B
-    # replace with PANDAS
-    print("Starting Intersection of two dataframes with PANDAS") 
-    
-    dA = pd.DataFrame(pKeysA) 
-    therows, thecolumns = pKeysA.shape
-    idx_a =np.arange(0, therows, 1)
-    dA = dA.assign(idxA=idx_a)
-    print("dataframeA: ")
-    print(dA) 
-
-    dB = pd.DataFrame(pKeysB)
-    therows, thecolumns = pKeysB.shape
-    idx_b =np.arange(0, therows, 1)
-    dB = dB.assign(idxB=idx_b)
-    print("dataframeB: ")
-    print(dB) 
-
-    # Calling merge() function 
-
-    int_dfAtoB = pd.merge(dA, dB, how ='inner', on =[0, 1]) 
-    # int_dfBtoA = pd.merge(dA, dB, how ='inner', on =[0, 1])  # just double checking if direction matters
-
-    print("All Matched Rows between A to B")    
-    print(int_dfAtoB)
-    # print("Matched rows between B to A") # just double checking direction
-    # print(int_dfBtoA)
-
-    #print("Remove redundant rows") 
-    #int_dfAtoB_noDups = int_dfAtoB.drop_duplicates()
-    #print(int_dfAtoB_noDups)
-    npAtoB = int_dfAtoB.to_numpy()
-    print(npAtoB)
-    idxs_A_B = np.delete(npAtoB,0,1) #kill first row
-    idxs_A_B = np.delete(idxs_A_B,0,1) #kill the new first row
-    print("these are the indices that correspond to matches from projA to projB")
-    print(idxs_A_B)
-
-
-    
-
-    #TODO
-    #then call bundle adjuster?
-    #run the mapper in a special way   --Mapper.filter_max_reproj_error arg (=4)   (use special arguments )
-
-    '''
-    args.extract = False  # skip feature extraction
-    args.match = False  # skip matching
-    args.update_matches = True
-    args.map = True
-    args.update_two_view_geometries = True
-    args.triangulate = True
-    args.bundle_adjust = True
-    args.num_threads = "1"
-    args.ba_local_max_num_iterations = "30"
-    args.ba_local_max_refinements = "3"
-    args.ba_global_max_num_iterations = "75"
-    args.min_num_matches = "1"
-    args.ignore_two_view_tracks = "0"
-
-    #call to colmap mapper
-    def colmap_mapper(db_path, img_path, output_path, num_threads, ba_local_max_num_iterations, ba_local_max_refinements, ba_global_max_num_iterations):
-    # parameters for mapper correspond to defaults for
-    # high quality images when using automatic_reconstructor
-    # num_threads helps remove non determinism due to ceres multi-threading
-    cmd = 'colmap mapper' + \
-        ' --database_path ' + db_path + \
-        ' --image_path ' + img_path + \
-        ' --output_path ' + output_path + \
-
-
-
-    if args.map:
-        copyfile(current_db_path, env.mapped_db)
-        current_db_path = env.mapped_db
-        colmap_mapper(current_db_path, env.images_path, env.sparse_model_path, args.num_threads,
-                      args.ba_local_max_num_iterations, args.ba_local_max_refinements, args.ba_global_max_num_iterations)
-
-    '''
-
-
-
-    
-    #add matches
+    ''' extra A-P and B-p matching code?
+    #CA - P add matches
     print("add matches to A")
 
     #arr = np.array([[1, 2, 3], [4, 5, 6]])
@@ -738,6 +631,7 @@ def example_usage():
 
     #db.update_two_view_geometries( matches_CA_P, image_ids_to_pair_id(proj_image_id,camA_image_id))
 
+    #CB - P add matches
     print("NOTE ADDING RIGHT NOW_!add matches to B")
     arrB = np.arange(0, totalRowsB, 1)
 
@@ -750,7 +644,63 @@ def example_usage():
     print("Adding Matches from A to B")
     #arrB = np.arange(0, totalRowsB, 1)
 
-    matches_A_B = idxs_A_B
+    '''
+       
+
+
+    # CAM A - CAM B MATCHES and TWO VIEW GEOMETRIES 
+    # # create the indices of aligned matches between CAM A and CAM B
+    
+    # RUN PANDAS for database matching
+    print("Starting Intersection of two dataframes with PANDAS") 
+    
+    dA = pd.DataFrame(pKeysA) 
+    therows, thecolumns = pKeysA.shape
+    idx_a =np.arange(0, therows, 1)
+    dA = dA.assign(idxA=idx_a)
+    print("dataframeA: ")
+    print(dA) 
+
+    dB = pd.DataFrame(pKeysB)
+    therowsB, thecolumns = pKeysB.shape
+    idx_b =np.arange(0, therowsB, 1)
+    dB = dB.assign(idxB=idx_b)
+    print("dataframeB: ")
+    print(dB) 
+
+    # Calling pandas merge() function 
+    int_dfAtoB = pd.merge(dA, dB, how ='inner', on =[0, 1]) 
+
+    print("All Matched Rows between A to B")    
+    print(int_dfAtoB)
+
+
+    print("Remove duplicate indicies")  #there don't be any change when this is run  with JUST drop_duplicates
+    # attempting to remove all in specific columns using subset command df.drop_duplicates(subset=[‘Color’])   
+    int_dfAtoB_noDups = int_dfAtoB.drop_duplicates(subset=['idxA']) #drop duplicates of colA
+    int_dfAtoB_noDups = int_dfAtoB_noDups.drop_duplicates(subset=['idxB']) #drop duplicates of colB
+
+    print(int_dfAtoB_noDups)
+
+    
+    print("Pandas converted to numpy array")
+    npAtoB = int_dfAtoB_noDups.to_numpy()
+    #npAtoB = int_dfAtoB.to_numpy()
+    print(npAtoB)
+    idxs_A_B = np.delete(npAtoB,0,1) #kill first COLUMN
+    idxs_A_B = np.delete(idxs_A_B,0,1) #kill the new first row COLUMN
+    print("these are the indices that correspond to matches from projA to projB")
+    print(idxs_A_B)
+    print(idxs_A_B.shape)
+
+
+
+    matches_A_B = idxs_A_B #ALERT 
+
+    matches_A_B = matches_A_B +[canCamAKeypointsOrigIndex+1,canCamBKeypointsOrigIndex+1] #ADD THE KEYPOINT OFFSET TO EACH. A and then B #ALERT just added a plus 1!
+
+    print("matches with correct offset for the keypoints")
+    print(matches_A_B)
     #print(matches_CB_P.shape)
     #print(matches_CB_P)
     #matches_CB_P =matches_CB_P.T #have to transpose it
@@ -759,24 +709,26 @@ def example_usage():
 
     
 
-    #----------------------Adding Graycode Matches Canon A to B -----------
+    #----------------------Inserting the Graycode Matches Canon A to B into the database -----------
     print("\n List Matches \n -----  ")  
 
     #db.update_two_view_geometries(cam)
     
     ABpair_id = image_ids_to_pair_id(camA_image_id, camB_image_id)
-    canonCamAMatches = db.execute("SELECT * from matches where pair_id='"+str(ABpair_id)+"'")
-    print(canonCamAMatches)
-    thepair_id, rows, cols, matchesdataBlob = next(canonCamAMatches)
-    matchesarrayA = np.frombuffer(matchesdataBlob, np.float32).reshape(rows, cols)
+    canonCamA_B_Matches = db.execute("SELECT * from matches where pair_id='"+str(ABpair_id)+"'")
+    thepair_id, rows, cols, matchesdataBlob = next(canonCamA_B_Matches)
+    matchesarrayA_B = np.frombuffer(matchesdataBlob, np.uint32).reshape(rows, cols)
 
     print("pair id for canon cameras images")
     print(thepair_id)
-    print(matchesarrayA.shape)
+    print("original matches Cam A")
+    print(matchesarrayA_B)
+    print(matchesarrayA_B.shape)
+
     print("last index of orignal matches ")
-    matchesOrigIndex =matchesarrayA.shape[0] -1
-    print(matchesOrigIndex)
-    print(matchesarrayA)
+    matchesOrigIndexA_B =matchesarrayA_B.shape[0] -1
+    print(matchesOrigIndexA_B)
+    print(matchesarrayA_B)
 
     print("_------------------ADDING -----Augmented Matches ---Hopefully ")
     #add the keypoints
@@ -795,24 +747,47 @@ def example_usage():
     #augmentedKeypointArray = np.append(keypointarray,np.asarray([[1,2,3,4,5,6]],np.float32) ) #EXAMPLE
     augmentedKeypointArrayA = np.append(keypointarrayA,cKeysA)
     '''
+    
+    
+    #print("adding only just a couple matches for debugging") 
+    #matches_A_B= matches_A_B[0:2] # #ALERT this is a test where we are just adding some of the hundreds of thousands of graycode matches
+    
     numofMatchesAddedA=matches_A_B.shape[0]
-
-    augmentedMatchesArrayA = np.append(matchesarrayA, matches_A_B)
+    augmentedMatchesArrayA = np.append(matchesarrayA_B, matches_A_B)
     print(augmentedMatchesArrayA.shape)
 
     #reshape it back how the database likes it
     augmentedMatchesArrayA =augmentedMatchesArrayA.reshape(rows+numofMatchesAddedA,cols)
     print("Matches data array augmented")
 
-    augmentedMatchesArrayA = np.asarray(augmentedMatchesArrayA, np.float32)
+    augmentedMatchesArrayA = np.asarray(augmentedMatchesArrayA, np.uint32)
     print(augmentedMatchesArrayA.shape)
+    print(augmentedMatchesArrayA)
 
     #put those keypoints into that database!
     data_tuple = (ABpair_id, augmentedMatchesArrayA.shape[0], augmentedMatchesArrayA.shape[1],array_to_blob(augmentedMatchesArrayA))
     
     #put the full list of matches into the database
-    canonCamAMatches = db.execute("INSERT or REPLACE INTO matches (pair_id, rows, cols, data) VALUES (?, ?, ?, ?)",data_tuple)
+    canonCamA_B_Matches = db.execute("INSERT or REPLACE INTO matches (pair_id, rows, cols, data) VALUES (?, ?, ?, ?)",data_tuple)
 
+    #run some tests to make sure our indicies are correct.
+    # so if everything is added correctly at the FIRST index of the augmented points we should have 
+    # Cam A  879 , 33
+    # 
+    #  
+    print("last SIFT match")
+    print(augmentedMatchesArrayA[matchesOrigIndexA_B])
+    print("LAST sift matches Keypoints")
+    print(augmentedKeypointArrayA[ augmentedMatchesArrayA[matchesOrigIndexA_B][0]])
+    print(augmentedKeypointArrayB[ augmentedMatchesArrayA[matchesOrigIndexA_B][1]])
+    print("first graycode match")
+    print(augmentedMatchesArrayA[matchesOrigIndexA_B+1])
+    print("first graycode matches Keypoints")
+    print(augmentedKeypointArrayA[ augmentedMatchesArrayA[matchesOrigIndexA_B+1][0]])
+    print(augmentedKeypointArrayB[ augmentedMatchesArrayA[matchesOrigIndexA_B+1][1]])
+
+    #add to two view geometries
+    db.update_two_view_geometries(augmentedMatchesArrayA, thepair_id)
 
     #db.add_matches(proj_image_id, camB_image_id, matches_CB_P) #incorrect method of adding matches right now
  
@@ -856,8 +831,7 @@ def example_usage():
     rowsA = db.execute("SELECT * FROM cameras")
     camera_id, model, width, height, params, prior = next(rowsA)
     params = blob_to_array(params, np.float64)
-
-    print(params)
+    #print(params)
 
     #assert camera_id == p_camera_id1
     #assert model == p_model1 and width == p_width1 and height == p_height1
@@ -901,7 +875,8 @@ def example_usage():
     """
 
     # Clean up.
-    
+    print("~~~~~~~~finished graycode Goochin!~~~~~~")
+
     db.close()
 
     #if os.path.exists(args.database_path):
