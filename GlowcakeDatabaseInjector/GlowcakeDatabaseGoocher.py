@@ -749,8 +749,8 @@ def example_usage():
     '''
     
     
-    #print("adding only just a couple matches for debugging") 
-    #matches_A_B= matches_A_B[0:2] # #ALERT this is a test where we are just adding some of the hundreds of thousands of graycode matches
+    print("adding only just a couple matches for debugging") 
+    matches_A_B= matches_A_B[0:2] # #ALERT this is a test where we are just adding some of the hundreds of thousands of graycode matches
     
     numofMatchesAddedA=matches_A_B.shape[0]
     augmentedMatchesArrayA = np.append(matchesarrayA_B, matches_A_B)
@@ -769,6 +769,8 @@ def example_usage():
     
     #put the full list of matches into the database
     canonCamA_B_Matches = db.execute("INSERT or REPLACE INTO matches (pair_id, rows, cols, data) VALUES (?, ?, ?, ?)",data_tuple)
+    #canonCamA_B_Matches = db.execute("UPDATE two_view_geometries SET config=2 where pair_id=2147483701 ") #testing manually setting the config of the two view geoms
+
 
     #run some tests to make sure our indicies are correct.
     # so if everything is added correctly at the FIRST index of the augmented points we should have 
