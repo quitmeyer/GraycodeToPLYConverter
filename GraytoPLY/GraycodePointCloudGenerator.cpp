@@ -33,8 +33,7 @@ and it will
 #include <opencv2/opencv_modules.hpp>
 #include <fstream>  
 #include "DataExporter.hpp"
-#include <iostream>
-#include <fstream>
+
 
 #include <iomanip>
 
@@ -333,8 +332,8 @@ int main(int argc, char** argv)
 		cout << "Decoding the Projected Pixels camA" << endl;
 		Mat camADecodedViz(whiteImages[0].rows, whiteImages[0].cols, CV_8UC3); // Start with all black images
 		Mat camBDecodedViz(whiteImages[0].rows, whiteImages[0].cols, CV_8UC3);
-		Point projPixelA; //= new Point(0.0, 0.0);
-		Point projPixelB; //= new Point(0.0, 0.0);
+		Point projPixelA =  Point(0.0, 0.0);
+		Point projPixelB =  Point(0.0, 0.0);
 
 
 		//coordinates of projected pixels
@@ -348,11 +347,19 @@ int main(int argc, char** argv)
 		std::vector<int>	XpB;
 		std::vector<int>	YpB;
 
+		vector<Point2i> pcA;
+		vector<Point2i> pcB;
+
+
+		cout << "Image is this TALL " << camADecodedViz.rows << endl;
+		cout << "Image is this WIDE " << camADecodedViz.cols << endl;
+
+
 		for (int i = 0; i < camADecodedViz.rows; i++)
 		{
 			for (int j = 0; j < camADecodedViz.cols; j++)
 			{
-				//Quick Threshold, only look at where it got projected
+				//Quick Threshold
 				if (abs((float)whiteImages[0].at<uchar>(i, j) - (float)blackImages[0].at<uchar>(i, j)) > 30) {
 
 
@@ -368,6 +375,14 @@ int main(int argc, char** argv)
 						camADecodedViz.at<Vec3b>(i, j) = color;
 					}
 					else { // Pattern  was sucessfully detected here
+						
+
+						XcA.push_back(j);
+						YcA.push_back(i);
+						pcA.push_back(Point(j, i));
+						XpA.push_back(projPixelA.x);
+						YpA.push_back(projPixelA.y);
+				
 
 
 						//Decode the pattern 
@@ -378,17 +393,14 @@ int main(int argc, char** argv)
 					*/
 
 						Vec3b color;
-						color[0] = static_cast<double>(projPixelA.x) / params.width * 255.0;
+						//color[0] = static_cast<double>(projPixelA.x) / params.width * 255.0;
 						color[1] = static_cast<double>(projPixelA.y) / params.height * 255.0;
 						color[2] = 0;
 
 						camADecodedViz.at<Vec3b>(i, j) = color;
 
 
-						XcA.push_back(j);
-						YcA.push_back(i);
-						XpA.push_back(projPixelA.x);
-						YpA.push_back(projPixelA.y);
+
 					}
 				}
 				else {
@@ -402,9 +414,9 @@ int main(int argc, char** argv)
 			}
 
 		}
-
-		cout << "Found this many projector pixels in image A: " << XcA.size() << endl;
-
+		cout << "Max Element in YCA: " << *std::max_element(YcA.begin(), YcA.end()) << endl;
+		cout << "Found this many projector pixels in image A: " << YcA.size() << "  " << XcA.size() << "  " << YpA.size() << endl;
+		cout << "Decoding the Projected Pixels camB" << endl;
 
 		//Cam b decode
 		for (int i = 0; i < camBDecodedViz.rows; i++)
@@ -416,7 +428,7 @@ int main(int argc, char** argv)
 
 
 					//This is the key function in the Structured light api that lets you hunt where each pixel from the projector is
-					bool error = graycode->getProjPixel(captured_pattern[1], j, i, projPixelB); //Get pixel based on view of first camera
+					bool error = graycode->getProjPixel(captured_pattern[1], j, i, projPixelB); //Get pixel based on view of second camera
 
 					if (error) {
 						// cout << endl << " Error Pixel no pattern here  i" << i <<"  j "<<j<< endl;
@@ -427,7 +439,6 @@ int main(int argc, char** argv)
 						camBDecodedViz.at<Vec3b>(i, j) = color;
 					}
 					else { // Pattern  was sucessfully detected here
-
 
 						//Decode the pattern 
 						 /*
@@ -468,6 +479,8 @@ int main(int argc, char** argv)
 
 		// SAVE THE CSV of the PIXELS
 		cout << "~~~Saving Pixel data to CSV... " << endl;
+		cout << "Max Element in YCA2: " << *std::max_element(YcA.begin(), YcA.end()) << endl;
+
 
 		//Cam A
 		std::ofstream myfile;
@@ -475,12 +488,15 @@ int main(int argc, char** argv)
 		//This is writing the line of the types
 		myfile << "Xc,Yc,Xp,Yp\n";
 
+		cout << "Max Element in YCA3: " << *std::max_element(YcA.begin(), YcA.end()) << endl;
+
 		//This loops through everything in the inventory and sets the file to these.
-		for (int i: XcA)
+		for (int i=0;  i<YcA.size(); i++)
 		{
-			myfile << XcA[i] << "," << YcA[i] <<
-				"," << XpA[i] <<
-				"," << YpA[i] << "\n";
+			//cout << "i " << i << endl;
+			//cout << "YCA " << YcA[i] << endl;
+
+			myfile << XcA[i] << "," << YcA[i] << "," << XpA[i] << "," << YpA[i] << "\n";
 
 		}
 		myfile.close();
@@ -495,11 +511,9 @@ int main(int argc, char** argv)
 		myfileB << "Xc,Yc,Xp,Yp\n";
 
 		//This loops through everything in the inventory and sets the file to these.
-		for (int i : XcB)
+		for (int i = 0; i<YcB.size() ; i++)
 		{
-			myfileB << XcB[i] << "," << YcA[i] <<
-				"," << XpB[i] <<
-				"," << YpB[i] << "\n";
+			myfileB << XcB[i] << "," << YcB[i] << "," << XpB[i] <<"," << YpB[i] << "\n";
 
 		}
 		myfileB.close();
