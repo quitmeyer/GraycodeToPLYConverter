@@ -33,6 +33,8 @@ and it will
 #include <opencv2/opencv_modules.hpp>
 #include <fstream>  
 #include "DataExporter.hpp"
+#include <iostream>
+#include <fstream>
 
 #include <iomanip>
 
@@ -42,9 +44,9 @@ using namespace cv;
 
 static const char* keys =
 {
-
-	"{images_list          |C:/Users/andre/Desktop/Glowcake Hoss/Calibrations/TestDecode/SLdata.yml|}" //For windows have to change all backslashes to forward slashes
-	"{calib_param_path     |C:/Users/andre/Desktop/Glowcake Hoss/Calibrations/TestDecode/stereoCalibrationParameters_camAcamB.yml| Calibration_parameters            }"
+	
+	"{images_list          |C:/Users/andre/Desktop/colmapPy/demoGrayCode/Gallery4GRAY_exp-5_1366Resolution/SLdata.yml|}" //For windows have to change all backslashes to forward slashes
+	"{calib_param_path     |C:/Users/andre/Desktop/colmapPy/demoGrayCode/Gallery4GRAY_exp-5_1366Resolution/calibrationParameters.yml| Calibration_parameters}"
 	"{exportPLY     |false| spend time creating a PLY image}"
 	"{@white_thresh     |<none>| The white threshold height (optional)}"
 	"{@black_thresh     |<none>| The black threshold (optional)}" };
@@ -101,10 +103,12 @@ static bool readStringListCameraImages(const string& filename, vector<string>& l
 	return true;
 }
 
+
+
 int main(int argc, char** argv)
 {
 
-	bool swapCameras = true; // Easy toggle in case cameras are listed backwards, e.g. computer grabbed Cam A as Cam B
+	bool swapCameras = false; // Easy toggle in case cameras are listed backwards, e.g. computer grabbed Cam A as Cam B
 
 	structured_light::GrayCodePattern::Params params;
 	CommandLineParser parser(argc, argv, keys);
@@ -118,8 +122,10 @@ int main(int argc, char** argv)
 	String calib_file = parser.get<String>("calib_param_path", true);
 	bool exportPLY = parser.get<bool>("exportPLY", true);
 
+	cout << images_file << endl;
+
 	//Where we saving everything
-	string outputFolder = "C:/Users/andre/Desktop/Glowcake Hoss/Calibrations/TestDecode/data";
+	string outputFolder = "C:/Users/andre/Desktop";
 
 	//Get the list of all the images, and load them into a structure for us
 	vector<string> imagelist;
@@ -322,12 +328,14 @@ int main(int argc, char** argv)
 
 	//Decoding Projector Pixels	
 	//Toggle to switch off the visualization of the Structured light projector pixels
-	bool decodeVis = false;
+	bool decodeVis = true;
 	if (decodeVis) {
 		cout << "Decoding the Projected Pixels camA" << endl;
 		Mat camADecodedViz(whiteImages[0].rows, whiteImages[0].cols, CV_8UC3); // Start with all black images
 		Mat camBDecodedViz(whiteImages[0].rows, whiteImages[0].cols, CV_8UC3);
 		Point projPixelA; //= new Point(0.0, 0.0);
+		Point projPixelB; //= new Point(0.0, 0.0);
+
 
 		//coordinates of projected pixels
 	//Xc is camera pixel for cams A and B, Xp is projector location
@@ -344,11 +352,11 @@ int main(int argc, char** argv)
 		{
 			for (int j = 0; j < camADecodedViz.cols; j++)
 			{
-
+				//Quick Threshold, only look at where it got projected
 				if (abs((float)whiteImages[0].at<uchar>(i, j) - (float)blackImages[0].at<uchar>(i, j)) > 30) {
 
 
-					//This is the key function in the Structured light api that lets you hunt where each pixel from the projector is
+					//This is the key function in the Structured light api that lets you hunt where each pixel from the projector is shining onto each pixel the camera sees
 					bool error = graycode->getProjPixel(captured_pattern[0], j, i, projPixelA); //Get pixel based on view of first camera
 
 					if (error) {
@@ -356,7 +364,7 @@ int main(int argc, char** argv)
 						Vec3b color; //BGR
 						color[0] = 0;
 						color[1] = 0;
-						color[2] = 255;
+						color[2] = 20;
 						camADecodedViz.at<Vec3b>(i, j) = color;
 					}
 					else { // Pattern  was sucessfully detected here
@@ -379,7 +387,7 @@ int main(int argc, char** argv)
 
 						XcA.push_back(j);
 						YcA.push_back(i);
-						XpA.push_back(projPixelA.y);
+						XpA.push_back(projPixelA.x);
 						YpA.push_back(projPixelA.y);
 					}
 				}
@@ -394,7 +402,112 @@ int main(int argc, char** argv)
 			}
 
 		}
-		imwrite(outputFolder + "/" + "Graycode Decode camA" + ".png", camADecodedViz);
+
+		cout << "Found this many projector pixels in image A: " << XcA.size() << endl;
+
+
+		//Cam b decode
+		for (int i = 0; i < camBDecodedViz.rows; i++)
+		{
+			for (int j = 0; j < camBDecodedViz.cols; j++)
+			{
+
+				if (abs((float)whiteImages[1].at<uchar>(i, j) - (float)blackImages[1].at<uchar>(i, j)) > 30) {
+
+
+					//This is the key function in the Structured light api that lets you hunt where each pixel from the projector is
+					bool error = graycode->getProjPixel(captured_pattern[1], j, i, projPixelB); //Get pixel based on view of first camera
+
+					if (error) {
+						// cout << endl << " Error Pixel no pattern here  i" << i <<"  j "<<j<< endl;
+						Vec3b color; //BGR
+						color[0] = 0;
+						color[1] = 0;
+						color[2] = 20;
+						camBDecodedViz.at<Vec3b>(i, j) = color;
+					}
+					else { // Pattern  was sucessfully detected here
+
+
+						//Decode the pattern 
+						 /*
+					Spit out image grayscale
+					CSV - 4 cols, Xc, Yc, Xp, Yp,
+					Rows - pixels of camera
+					*/
+
+						Vec3b color;
+						color[0] = static_cast<double>(projPixelB.x) / params.width * 255.0;
+						color[1] = static_cast<double>(projPixelB.y) / params.height * 255.0;
+						color[2] = 0;
+
+						camBDecodedViz.at<Vec3b>(i, j) = color;
+
+
+						XcB.push_back(j);
+						YcB.push_back(i);
+						XpB.push_back(projPixelB.x);
+						YpB.push_back(projPixelB.y);
+					}
+				}
+				else {
+					Vec3b color;
+					color[0] = 0;
+					color[1] = 0;
+					color[2] = 0;
+
+					camBDecodedViz.at<Vec3b>(i, j) = color;
+				}
+			}
+
+		}
+
+
+		imwrite(outputFolder + "/GraycodeDecode/" + "Graycode Decode camA" + ".png", camADecodedViz);
+		imwrite(outputFolder + "/GraycodeDecode/" + "Graycode Decode camB" + ".png", camBDecodedViz);
+
+		// SAVE THE CSV of the PIXELS
+		cout << "~~~Saving Pixel data to CSV... " << endl;
+
+		//Cam A
+		std::ofstream myfile;
+		myfile.open(outputFolder + "/GraycodeDecode/" + "ProjPointsCamA.CSV");
+		//This is writing the line of the types
+		myfile << "Xc,Yc,Xp,Yp\n";
+
+		//This loops through everything in the inventory and sets the file to these.
+		for (int i: XcA)
+		{
+			myfile << XcA[i] << "," << YcA[i] <<
+				"," << XpA[i] <<
+				"," << YpA[i] << "\n";
+
+		}
+		myfile.close();
+
+
+
+		//Cam B
+		std::ofstream myfileB;
+
+		myfileB.open(outputFolder + "/GraycodeDecode/" + "ProjPointsCamB.CSV");
+		//This is writing the line of the types
+		myfileB << "Xc,Yc,Xp,Yp\n";
+
+		//This loops through everything in the inventory and sets the file to these.
+		for (int i : XcB)
+		{
+			myfileB << XcB[i] << "," << YcA[i] <<
+				"," << XpB[i] <<
+				"," << YpB[i] << "\n";
+
+		}
+		myfileB.close();
+
+
+
+
+
 	}//End Decode Projector Pixels
 
 
@@ -489,6 +602,7 @@ int main(int argc, char** argv)
 		imwrite(outputFolder + "/" + "whiteimg rect camB" + ".png", whiteImages[1]);
 		cout << "done rectifying" << endl;
 	}
+
 
 
 	//Decode the Graycodes from the rectified images
