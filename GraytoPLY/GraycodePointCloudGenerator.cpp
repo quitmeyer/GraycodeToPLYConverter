@@ -107,7 +107,7 @@ static bool readStringListCameraImages(const string& filename, vector<string>& l
 int main(int argc, char** argv)
 {
 
-	bool swapCameras = false; // Easy toggle in case cameras are listed backwards, e.g. computer grabbed Cam A as Cam B
+	bool swapCameras = true; // Easy toggle in case cameras are listed backwards, e.g. computer grabbed Cam A as Cam B
 
 	structured_light::GrayCodePattern::Params params;
 	CommandLineParser parser(argc, argv, keys);
