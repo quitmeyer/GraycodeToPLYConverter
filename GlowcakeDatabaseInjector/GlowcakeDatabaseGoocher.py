@@ -219,7 +219,7 @@ class COLMAPDatabase(sqlite3.Connection):
     def add_two_view_geometry(self, image_id1, image_id2, matches,
                               F=np.eye(3), E=np.eye(3), H=np.eye(3),
                               qvec=np.array([1.0, 0.0, 0.0, 0.0]),
-                              tvec=np.zeros(3), config=2): #note andy changed this from 2
+                              tvec=np.zeros(3), config=4): #note andy changed this from 2
         assert(len(matches.shape) == 2)
         assert(matches.shape[1] == 2)
 
@@ -759,22 +759,23 @@ def example_usage():
     '''
     
     
-
-    print("adding only just a couple tvgpairs for debugging") 
     numofTVGpairsAddedA=TVGpairs_A_B.shape[0]
-
-    #TVGpairs_A_B= TVGpairs_A_B[0:1000] # #ALERT this is a test where we are just adding some of the hundreds of thousands of graycode matches
-    TVGpairs_A_B= TVGpairs_A_B[ np.random.choice(numofTVGpairsAddedA,10000,replace=False)]
+    print("adding only just a couple tvgpairs for debugging") 
+    #TVGpairs_A_B= TVGpairs_A_B[0:10000] # #ALERT this is a test where we are just adding some of the hundreds of thousands of graycode matches
+    TVGpairs_A_B= TVGpairs_A_B[ np.random.choice(numofTVGpairsAddedA,2000,replace=False)]
     
     numofTVGpairsAddedA=TVGpairs_A_B.shape[0]
     augmentedTVGpairsArrayA = np.append(TVGarrayA_B, TVGpairs_A_B)
-    
+    print(numofTVGpairsAddedA)
+
     #running a test to not include any original TVG pairs
-    #augmentedTVGpairsArrayA = TVGpairs_A_B
-    #augmentedTVGpairsArrayA =augmentedTVGpairsArrayA.reshape(numofTVGpairsAddedA,cols)
+    print("Not keeping originals") 
+   
+    augmentedTVGpairsArrayA = TVGpairs_A_B
+    augmentedTVGpairsArrayA =augmentedTVGpairsArrayA.reshape(numofTVGpairsAddedA,cols)
     
     #reshape it back how the database likes it
-    augmentedTVGpairsArrayA =augmentedTVGpairsArrayA.reshape(rows+numofTVGpairsAddedA,cols)
+    #augmentedTVGpairsArrayA =augmentedTVGpairsArrayA.reshape(rows+numofTVGpairsAddedA,cols)
 
     print("TVGpairs data array augmented")
     print(augmentedTVGpairsArrayA.shape)
@@ -788,7 +789,7 @@ def example_usage():
     
     #put the full list of matches into the database
     #canonCamA_B_Matches = db.execute("INSERT or REPLACE INTO matches (pair_id, rows, cols, data) VALUES (?, ?, ?, ?)",data_tuple)
-    #canonCamA_B_Matches = db.execute("UPDATE two_view_geometries SET config=2 where pair_id=2147483701 ") #testing manually setting the config of the two view geoms
+    canonCamA_B_Matches = db.execute("UPDATE two_view_geometries SET config=5 where pair_id=2147483701 ") #testing manually setting the config of the two view geoms
 
 
     #run some tests to make sure our indicies are correct.
@@ -796,16 +797,16 @@ def example_usage():
     # Cam A  879 , 33
     # 
     #  
-    print("last SIFT match")
+    print("last TVGSIFT match")
    # print(augmentedTVGpairsArrayA[TVGpairsOrigIndexA_B])
     print("LAST sift matches Keypoints")
-    #print(augmentedKeypointArrayA[ augmentedTVGpairsArrayA[TVGpairsOrigIndexA_B][0]])
-    #print(augmentedKeypointArrayB[ augmentedTVGpairsArrayA[TVGpairsOrigIndexA_B][1]])
+    print(augmentedKeypointArrayA[ augmentedTVGpairsArrayA[TVGpairsOrigIndexA_B][0]])
+    print(augmentedKeypointArrayB[ augmentedTVGpairsArrayA[TVGpairsOrigIndexA_B][1]])
     #print("first graycode match")
     #print(augmentedTVGpairsArrayA[TVGpairsOrigIndexA_B+1])
     print("first graycode matches Keypoints")
-    #print(augmentedKeypointArrayA[ augmentedTVGpairsArrayA[TVGpairsOrigIndexA_B+1][0]])
-    #print(augmentedKeypointArrayB[ augmentedTVGpairsArrayA[TVGpairsOrigIndexA_B+1][1]])
+    print(augmentedKeypointArrayA[ augmentedTVGpairsArrayA[TVGpairsOrigIndexA_B+1][0]])
+    print(augmentedKeypointArrayB[ augmentedTVGpairsArrayA[TVGpairsOrigIndexA_B+1][1]])
 
     #add to two view geometries
     db.update_two_view_geometries(augmentedTVGpairsArrayA, thepair_id)
@@ -830,16 +831,6 @@ def example_usage():
     db.add_keypoints(image_id3, keypoints3) """
 
 
-
-    # Create dummy matches.
-
-    """    M = 50
-    matches12 = np.random.randint(num_keypoints, size=(M, 2))
-    matches23 = np.random.randint(num_keypoints, size=(M, 2))
-    matches34 = np.random.randint(num_keypoints, size=(M, 2))
-
-    db.add_matches(proj_image_id1, image_id2, matches12)
-    db.add_matches(image_id2, image_id3, matches23) """
 
     #~~~~~ Commit the data to the file.
     
