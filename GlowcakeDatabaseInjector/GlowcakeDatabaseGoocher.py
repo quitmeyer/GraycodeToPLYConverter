@@ -31,6 +31,7 @@
 
 # This script is based on an original implementation by True Price.
 
+from pickle import FALSE, TRUE
 from sqlite3.dbapi2 import Cursor, connect
 import sys
 import sqlite3
@@ -573,7 +574,7 @@ def example_usage():
 
 
 
-    # -------- Add to matches and  two_view_geometries ----------
+    # -------- Add Projector matches to matches and  two_view_geometries ----------
 
     
     #CAM A - PROJ
@@ -612,7 +613,7 @@ def example_usage():
        
 
 
-    # CAM A - CAM B TWO VIEW GEOMETRIES 
+    #~~~~~~~~~~~~ CAM A - CAM B TWO VIEW GEOMETRIES ~~~~~~~~~~~~~~~~~
     # # create the indices of aligned matches between CAM A and CAM B
     
     # RUN PANDAS for database matching
@@ -698,9 +699,11 @@ def example_usage():
     print("_------------------ADDING -----Augmented Matches ---Hopefully ")
 
     numofMATCHESAddedA=Matches_A_B.shape[0]
-    print("adding only just a couple Matches for debugging") 
-    Matches_A_B= Matches_A_B[0:200] # #ALERT this is a test where we are just adding some of the hundreds of thousands of graycode matches
-    #Matches_A_B= Matches_A_B[ np.random.choice(numofMATCHESAddedA,10,replace=False)]  #Note with the random choice, these WONT be the same as the TVG
+    matchAddLimit=-1
+    if(matchAddLimit>0):
+        print("adding only just a couple Matches for debugging") 
+        Matches_A_B= Matches_A_B[0:matchAddLimit] # this is a test where we are just adding some of the hundreds of thousands of graycode matches
+        #Matches_A_B= Matches_A_B[ np.random.choice(numofMATCHESAddedA,5,replace=False)]  #Note with the random choice, these WONT be the same as the TVG
     
     numofMATCHESAddedA=Matches_A_B.shape[0]
     augmentedMatchesArrayAB = np.append(Matches_arrayA_B, Matches_A_B)
@@ -772,42 +775,43 @@ def example_usage():
     print("_------------------ADDING -----Augmented TVG Pairs ---Hopefully ")
     
     numofTVGpairsAddedA=TVGpairs_A_B.shape[0]
-    print("adding only just a couple tvgpairs for debugging") 
-    TVGpairs_A_B= TVGpairs_A_B[0:200] # #ALERT this is a test where we are just adding some of the hundreds of thousands of graycode matches
-    #TVGpairs_A_B= TVGpairs_A_B[ np.random.choice(numofTVGpairsAddedA,2000,replace=False)]
+    if(matchAddLimit>0):
+        print("adding only just a couple tvgpairs for debugging") 
+        TVGpairs_A_B= TVGpairs_A_B[0:matchAddLimit] # #ALERT this is a test where we are just adding some of the hundreds of thousands of graycode matches
+        #TVGpairs_A_B= TVGpairs_A_B[ np.random.choice(numofTVGpairsAddedA,5,replace=False)]
     
     numofTVGpairsAddedA=TVGpairs_A_B.shape[0]
-    augmentedTVGpairsArrayA = np.append(TVGarrayA_B, TVGpairs_A_B)
+    augmentedTVGpairsArrayAB = np.append(TVGarrayA_B, TVGpairs_A_B)
     print(numofTVGpairsAddedA)
 
     #reshape it back how the database likes it
-    augmentedTVGpairsArrayA =augmentedTVGpairsArrayA.reshape(rows+numofTVGpairsAddedA,cols)
+    augmentedTVGpairsArrayAB =augmentedTVGpairsArrayAB.reshape(rows+numofTVGpairsAddedA,cols)
 
     #another test - just having the originals and nothing else
     if(onlyOrigs):
         #running a test to not include any original MATCHES
         print("Only original TVGs") 
-        augmentedTVGpairsArrayA = TVGarrayA_B #this overwrites the augmented matches above
-        augmentedTVGpairsArrayA =augmentedTVGpairsArrayA.reshape(rows,cols) 
+        augmentedTVGpairsArrayAB = TVGarrayA_B #this overwrites the augmented matches above
+        augmentedTVGpairsArrayAB =augmentedTVGpairsArrayAB.reshape(rows,cols) 
 
 
     if(removeOrigMatches):
         #running a test to not include any original TVG pairs
         print("Not keeping originals") 
     
-        augmentedTVGpairsArrayA = TVGpairs_A_B #this overwrites the call above
-        augmentedTVGpairsArrayA =augmentedTVGpairsArrayA.reshape(numofTVGpairsAddedA,cols)
+        augmentedTVGpairsArrayAB = TVGpairs_A_B #this overwrites the call above
+        augmentedTVGpairsArrayAB =augmentedTVGpairsArrayAB.reshape(numofTVGpairsAddedA,cols)
         
 
     print("TVGpairs data array augmented")
-    print(augmentedTVGpairsArrayA.shape)
+    print(augmentedTVGpairsArrayAB.shape)
 
-    augmentedTVGpairsArrayA = np.asarray(augmentedTVGpairsArrayA, np.uint32)
-    print(augmentedTVGpairsArrayA.shape)
-    print(augmentedTVGpairsArrayA)
+    augmentedTVGpairsArrayAB = np.asarray(augmentedTVGpairsArrayAB, np.uint32)
+    print(augmentedTVGpairsArrayAB.shape)
+    print(augmentedTVGpairsArrayAB)
 
     #put those keypoints into that database!
-    data_tuple = (ABpair_id, augmentedTVGpairsArrayA.shape[0], augmentedTVGpairsArrayA.shape[1],array_to_blob(augmentedTVGpairsArrayA))
+    data_tuple = (ABpair_id, augmentedTVGpairsArrayAB.shape[0], augmentedTVGpairsArrayAB.shape[1],array_to_blob(augmentedTVGpairsArrayAB))
     
     #put the full list of matches into the database
     #canonCamA_B_Matches = db.execute("INSERT or REPLACE INTO matches (pair_id, rows, cols, data) VALUES (?, ?, ?, ?)",data_tuple)
@@ -821,20 +825,29 @@ def example_usage():
     #
     # 
     #   
-    if(onlyOrigs==False):
+
+    if(removeOrigMatches==FALSE):
         print("last TVGSIFT match")
         # print(augmentedTVGpairsArrayA[TVGpairsOrigIndexA_B])
         print("LAST sift matches Keypoints")
-        print(augmentedKeypointArrayA[ augmentedTVGpairsArrayA[TVGpairsOrigIndexA_B][0]])
-        print(augmentedKeypointArrayB[ augmentedTVGpairsArrayA[TVGpairsOrigIndexA_B][1]])
+        print(augmentedKeypointArrayA[ augmentedTVGpairsArrayAB[TVGpairsOrigIndexA_B][0]])
+        print(augmentedKeypointArrayB[ augmentedTVGpairsArrayAB[TVGpairsOrigIndexA_B][1]])
+    if(onlyOrigs==False and removeOrigMatches==False):
+
         #print("first graycode match")
         #print(augmentedTVGpairsArrayA[TVGpairsOrigIndexA_B+1])
         print("first graycode matches Keypoints")
-        print(augmentedKeypointArrayA[ augmentedTVGpairsArrayA[TVGpairsOrigIndexA_B+1][0]])
-        print(augmentedKeypointArrayB[ augmentedTVGpairsArrayA[TVGpairsOrigIndexA_B+1][1]])
-
+        print(augmentedKeypointArrayA[ augmentedTVGpairsArrayAB[TVGpairsOrigIndexA_B+1][0]])
+        print(augmentedKeypointArrayB[ augmentedTVGpairsArrayAB[TVGpairsOrigIndexA_B+1][1]])
+    else:
+        print("first graycode TVGs Keypoints")
+        print(augmentedKeypointArrayA[augmentedTVGpairsArrayAB[0][0]])
+        print(augmentedKeypointArrayB[augmentedTVGpairsArrayAB[0][1]])
+        print("Last graycode TVGs Keypoints")
+        print(augmentedKeypointArrayA[augmentedTVGpairsArrayAB[numofTVGpairsAddedA-1][0]])
+        print(augmentedKeypointArrayB[augmentedTVGpairsArrayAB[numofTVGpairsAddedA-1][1]])
     #add to two view geometries
-    db.update_two_view_geometries(augmentedTVGpairsArrayA, thepair_id)
+    db.update_two_view_geometries(augmentedTVGpairsArrayAB, thepair_id)
 
     #db.add_matches(proj_image_id, camB_image_id, matches_CB_P) #incorrect method of adding matches right now
  

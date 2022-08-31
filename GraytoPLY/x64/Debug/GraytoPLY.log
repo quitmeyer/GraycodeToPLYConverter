@@ -21,6 +21,11 @@ C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCl
           [
               _Tp=int
           ]
+C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(396,67): warning C4244: '=': conversion from 'double' to '_Tp', possible loss of data
+          with
+          [
+              _Tp=uchar
+          ]
 C:\Users\andre\Documents\GitHub\GraycodeToPLYConverter\GraytoPLY\GraycodePointCloudGenerator.cpp(397,68): warning C4244: '=': conversion from 'double' to '_Tp', possible loss of data
           with
           [

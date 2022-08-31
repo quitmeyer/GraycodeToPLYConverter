@@ -359,8 +359,8 @@ int main(int argc, char** argv)
 		{
 			for (int j = 0; j < camADecodedViz.cols; j++)
 			{
-				//Quick Threshold
-				if (abs((float)whiteImages[0].at<uchar>(i, j) - (float)blackImages[0].at<uchar>(i, j)) > 30) {
+				//Quick Threshold //Original Threshold was 30, trying other values now
+				if (abs((float)whiteImages[0].at<uchar>(i, j) - (float)blackImages[0].at<uchar>(i, j)) > 100) {
 
 
 					//This is the key function in the Structured light api that lets you hunt where each pixel from the projector is shining onto each pixel the camera sees
@@ -393,7 +393,7 @@ int main(int argc, char** argv)
 					*/
 
 						Vec3b color;
-						//color[0] = static_cast<double>(projPixelA.x) / params.width * 255.0;
+						color[0] = static_cast<double>(projPixelA.x) / params.width * 255.0;
 						color[1] = static_cast<double>(projPixelA.y) / params.height * 255.0;
 						color[2] = 0;
 
