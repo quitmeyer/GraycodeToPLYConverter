@@ -220,7 +220,7 @@ class COLMAPDatabase(sqlite3.Connection):
     def add_two_view_geometry(self, image_id1, image_id2, matches,
                               F=np.eye(3), E=np.eye(3), H=np.eye(3),
                               qvec=np.array([1.0, 0.0, 0.0, 0.0]),
-                              tvec=np.zeros(3), config=4): #note andy changed this from 2
+                              tvec=np.zeros(3), config=2): #note andy changed this from 2
         assert(len(matches.shape) == 2)
         assert(matches.shape[1] == 2)
 
@@ -235,9 +235,9 @@ class COLMAPDatabase(sqlite3.Connection):
         qvec = np.asarray(qvec, dtype=np.float64)
         tvec = np.asarray(tvec, dtype=np.float64)
         self.execute(
-            "INSERT INTO two_view_geometries VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO two_view_geometries VALUES (?, ?, ?, ?, ?, ?, ?, ?,?,?)",
             (pair_id,) + matches.shape + (array_to_blob(matches), config,
-             array_to_blob(F), array_to_blob(E), array_to_blob(H)))
+             array_to_blob(F), array_to_blob(E), array_to_blob(H),qvec, tvec)) #andy fixed this function by adding the qvec and tvec to the end
 
     
 
@@ -276,17 +276,7 @@ def example_usage():
     # For convenience, try creating all the tables upfront.
 
     db.create_tables()
-    '''
-    AllImages = db.execute("SELECT * from Images")
-    for i in AllImages:
-        print("AllImages  ")  
-        print(i)   
 
-    AllCameras = db.execute("SELECT * from Cameras")
-    for i in AllCameras:
-        print("AllCameras  ")  
-        print(i)  
-    '''
 
     ### Get the Canonical Camera's ID
     print("\n List Canonical Camera A  ")  
@@ -344,17 +334,17 @@ def example_usage():
     #create dummy camera for the projector
         # model 4 is OPENCV, 0 is simple pinhole  2 is simple radial
         #values taken from guess calculations
-    p_model1, p_width1, p_height1, p_params1 =  4, 1366, 768, np.array((1.732,1.732, 1366/2, 768/2,0,0,0,0)) #you need this many arguments for an openCV param or it will crash everything
+    #p_model1, p_width1, p_height1, p_params1 =  4, 1366, 768, np.array((1.732,1.732, 1366/2, 768/2,0,0,0,0)) #you need this many arguments for an openCV param or it will crash everything
+    p_model1, p_width1, p_height1, p_params1 =  4, 1920, 1080, np.array((1.732,1.732, 1920/2, 1080/2,0,0,0,0)) #you need this many arguments for an openCV param or it will crash everything
 
     p_camera_id1 = db.add_camera(p_model1, p_width1, p_height1, p_params1)
     print("added the projector camera with id = "+str(p_camera_id1))
 
     # Create Graycode Match images.
     
-    proj_image_id = db.add_image("projector/white1366.png", p_camera_id1) #fake graycode from projector
-    #camA_image_id = db.add_image("extras/CamB_WB_1.png", 1)     #view of Black image from graycode in CAMA
-    #camB_image_id = db.add_image("extras/CamA_WB_1.png", 2)     #view of black image graycode in CAMB //Note the cameras are flipped
-
+    #proj_image_id = db.add_image("projector/white1366.png", p_camera_id1) #fake graycode from projector
+    proj_image_id = db.add_image("projector/white1920.png", p_camera_id1) #fake graycode from projector
+    
 
     #~~~~ READ GRAYCODE FROM CSV FILES ~~~~~~~~~~~~~
 
@@ -380,23 +370,13 @@ def example_usage():
     # printing the field names
     print('Field names are:' + ', '.join(field for field in fieldsA))
 
-    '''
-    #  printing first 5 rows
-    print('\nFirst 5 rows are:\n')
-    for row in rowsA[:5]:
-        # parsing each column of a row
-        # Field names are:Xc, Yc, Xp, Yp
-        for col in row:
-            print("%10s"%col),
-        print('\n')
-        #db.add_keypoints(image_id1, (int(lines[0]),int(lines[0])))
-    '''
+
     
     #CAMERA B GRAYCODE CSV
     # initializing the titles and rows list
     fieldsB = []
     rowsB = []
-    # reading csv file for Camera A
+    # reading csv file for Camera B
     with open(args.camBPoints, 'r') as csvfileB:
     # creating a csv reader object
         csvreaderB = csv.reader(csvfileB)
@@ -413,32 +393,7 @@ def example_usage():
         totalRowsB = csvreaderB.line_num
     # printing the field names
     print('Field names are:' + ', '.join(field for field in fieldsB))
-    '''
-    #  printing first 5 rows
-    print('\nFirst 5 rows of B are:\n')
-    for row in rowsB[:5]:
-        # parsing each column of a row
-        # Field names are:Xc, Yc, Xp, Yp
-        for col in row:
-            print("%10s"%col),
-        print('\n')
-        #db.add_keypoints(image_id1, (int(lines[0]),int(lines[0])))
-    '''
-
-    #go through ALL rows
-    #for row in rows:
-        #keypoint = np.array([(int(row[0]),int(row[1]))])
-        #print(row[0]+"  "+row[1])
-        #print(keypoint)
-        #n=n+1
-    
-    """  numpy.delete(arr, obj, axis=None)
-
-    arr refers to the input array,
-    obj refers to which sub-arrays (e.g. column/row no. or slice of the array) and
-    axis refers to either column wise (axis = 1) or row-wise (axis = 0) delete operation.
-    """
-
+   
 
     #------------Add keypoints-------------------
 
@@ -447,9 +402,7 @@ def example_usage():
     print("\n List Canonical Camera A Keypoints \n -----  ")  
 
     canonCamAKeypoints = db.execute("SELECT * from keypoints where image_id='"+str(camA_image_id)+"'")
-    #for i in canonCamAKeypoints:
-    #     print("\n canonical Camera A  ")  
-         #print(i)
+
     image_id, rows, cols, keypointblob = next(canonCamAKeypoints)
     keypointarrayA = np.frombuffer(keypointblob, np.float32).reshape(rows, cols)
 
@@ -469,12 +422,10 @@ def example_usage():
     print(cKeysA)
     print(cKeysA.shape)
     numofKeypointsAddedA=cKeysA.shape[0]
-    #empty_array = np.empty((cKeysA.shape[0], 4), np.float32)
     ones_array = np.ones((cKeysA.shape[0], 4), np.float32)
     
     cKeysA = np.append(cKeysA,ones_array,axis=1)
     print(cKeysA.shape)
-    #augmentedKeypointArray = np.append(keypointarray,np.asarray([[1,2,3,4,5,6]],np.float32) ) #EXAMPLE
     augmentedKeypointArrayA = np.append(keypointarrayA,cKeysA)
 
 
@@ -490,9 +441,6 @@ def example_usage():
 
     canonCamA = db.execute("INSERT or REPLACE INTO keypoints (image_id, rows, cols, data) VALUES (?, ?, ?, ?)",data_tuple)
 
-
-    #print("cKeysA after Subtraction (for inverted Y's) ") #note the CSV's we get from the graycode machine can sometimes spit out Y coordinates reversed of what they should be for Colmap
-
     cam_width = 4096
     cam_height = 2160
     #cKeysA = -2160+cKeysA
@@ -505,11 +453,8 @@ def example_usage():
     #add keypoints for Camera A canon image
     print("\n List Canonical Camera B Keypoints \n -----  ")  
 
-    #db.add_keypoints(camB_image_id, cKeysB)
     canonCamBKeypoints = db.execute("SELECT * from keypoints where image_id='"+str(camB_image_id)+"'")
-    #for i in canonCamAKeypoints:
-    #     print("\n canonical Camera A  ")  
-         #print(i)
+
     image_idB, bRows, bCols, keypointblobB = next(canonCamBKeypoints)
     keypointarrayB = np.frombuffer(keypointblobB, np.float32).reshape(bRows, bCols)
 
@@ -528,7 +473,6 @@ def example_usage():
     print(cKeysB)
     print(cKeysB.shape)
     numofKeypointsAddedB=cKeysB.shape[0]
-    #empty_array = np.empty((cKeysA.shape[0], 4), np.float32)
     ones_arrayB = np.ones((cKeysB.shape[0], 4), np.float32)
     
     cKeysB = np.append(cKeysB,ones_arrayB,axis=1)
@@ -558,8 +502,6 @@ def example_usage():
     print("\npKeysA ")
     print(pKeysA)
 
-    #db.add_keypoints(proj_image_id, pKeysA) #add to the projector
-
     pKeysB=np.delete(rowsB,np.s_[0:2],1)
     print("\npKeysB ")
     print(pKeysB)
@@ -576,7 +518,8 @@ def example_usage():
 
     # -------- Add Projector matches to matches and  two_view_geometries ----------
 
-    
+    print("-----Creating Matches between Proj and (CamA and Cam B)-------") 
+
     #CAM A - PROJ
     # create the indices of aligned matches between CAM A and PROJ
     arrA = np.arange(canCamAKeypointsOrigIndex, canCamAKeypointsOrigIndex+numofKeypointsAddedA, 1)
@@ -591,10 +534,9 @@ def example_usage():
     print(matches_CA_P.shape)
     print(matches_CA_P)
 
-    #db.add_matches(camA_image_id,proj_image_id,matches_CA_P)
+    db.add_matches(camA_image_id,proj_image_id,matches_CA_P)
     #db.update_two_view_geometries( matches_CA_P, image_ids_to_pair_id(camA_image_id,proj_image_id))
-    
-    #db.add_two_view_geometry(camA_image_id,proj_image_id,matches_CA_P) #temp disable
+    db.add_two_view_geometry(camA_image_id,proj_image_id,matches_CA_P) 
 
     #CAM B - PROJ
     # create the indices of aligned matches between CAM A and PROJ
@@ -611,10 +553,18 @@ def example_usage():
     print(matches_CB_P.shape)
     print(matches_CB_P)
        
+    db.add_matches(camB_image_id,proj_image_id,matches_CB_P)
+    #db.update_two_view_geometries( matches_CA_P, image_ids_to_pair_id(camA_image_id,proj_image_id))
+    db.add_two_view_geometry(camB_image_id,proj_image_id,matches_CB_P) 
+
+
+
 
 
     #~~~~~~~~~~~~ CAM A - CAM B TWO VIEW GEOMETRIES ~~~~~~~~~~~~~~~~~
     # # create the indices of aligned matches between CAM A and CAM B
+    print("-----Creating Matches between Cam A and Cam B-------") 
+
     
     # RUN PANDAS for database matching
     print("Starting Intersection of two dataframes with PANDAS") 
@@ -735,7 +685,7 @@ def example_usage():
     print(augmentedMatchesArrayAB.shape)
     print(augmentedMatchesArrayAB)
 
-    #put those keypoints into that database!
+    #put those matches into that database!
     data_tuple = (ABpair_id, augmentedMatchesArrayAB.shape[0], augmentedMatchesArrayAB.shape[1],array_to_blob(augmentedMatchesArrayAB))
     
     #put the full list of matches into the database
