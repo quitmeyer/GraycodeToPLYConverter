@@ -251,6 +251,9 @@ def example_usage():
     parser.add_argument("--db", default="database.db")
     parser.add_argument("--camAPoints", default="ProjPointsCamA.CSV")
     parser.add_argument("--camBPoints", default="ProjPointsCamB.CSV")
+    parser.add_argument("--projWidth", default="1920")
+    parser.add_argument("--projHeight", default="1080")
+    parser.add_argument("--projImage", default="white1920.png")
 
 
     args = parser.parse_args()
@@ -335,7 +338,9 @@ def example_usage():
         # model 4 is OPENCV, 0 is simple pinhole  2 is simple radial
         #values taken from guess calculations
     #p_model1, p_width1, p_height1, p_params1 =  4, 1366, 768, np.array((1.732,1.732, 1366/2, 768/2,0,0,0,0)) #you need this many arguments for an openCV param or it will crash everything
-    p_model1, p_width1, p_height1, p_params1 =  4, 1920, 1080, np.array((1.732,1.732, 1920/2, 1080/2,0,0,0,0)) #you need this many arguments for an openCV param or it will crash everything
+    #p_model1, p_width1, p_height1, p_params1 =  4, 1920, 1080, np.array((1.732,1.732, 1920/2, 1080/2,0,0,0,0)) #you need this many arguments for an openCV param or it will crash everything
+    #p_model1, p_width1, p_height1, p_params1 =  4, 3840, 2160, np.array((1.732,1.732, 3840/2, 2160/2,0,0,0,0)) #you need this many arguments for an openCV param or it will crash everything
+    p_model1, p_width1, p_height1, p_params1 =  4, args.projWidth, args.projHeight, np.array((1.732,1.732, int(args.projWidth)/2, int(args.projHeight)/2,0,0,0,0)) #you need this many arguments for an openCV param or it will crash everything
 
     p_camera_id1 = db.add_camera(p_model1, p_width1, p_height1, p_params1)
     print("added the projector camera with id = "+str(p_camera_id1))
@@ -343,8 +348,10 @@ def example_usage():
     # Create Graycode Match images.
     
     #proj_image_id = db.add_image("projector/white1366.png", p_camera_id1) #fake graycode from projector
-    proj_image_id = db.add_image("projector/white1920.png", p_camera_id1) #fake graycode from projector
-    
+    #proj_image_id = db.add_image("projector/white1920.png", p_camera_id1) #fake graycode from projector
+    #proj_image_id = db.add_image("projector/white3840.png", p_camera_id1) #fake graycode from projector
+    proj_image_id = db.add_image("projector/"+args.projImage, p_camera_id1) #fake graycode from projector
+
 
     #~~~~ READ GRAYCODE FROM CSV FILES ~~~~~~~~~~~~~
 
@@ -421,6 +428,9 @@ def example_usage():
     print("cKeysA ")
     print(cKeysA)
     print(cKeysA.shape)
+
+ 
+
     numofKeypointsAddedA=cKeysA.shape[0]
     ones_array = np.ones((cKeysA.shape[0], 4), np.float32)
     
@@ -502,6 +512,14 @@ def example_usage():
     print("\npKeysA ")
     print(pKeysA)
 
+    '''
+    print("!!!! dirty HACK ALERT - flipping keypoints for projector !!!")
+    projthang = np.array([[1920,1080]])
+    print(projthang)
+    pKeysA=projthang -pKeysA
+    #np.subtract(pKeysA[ :, 1], 1080, out=pKeysA[ :, 1])
+    print(pKeysA)
+    '''
     pKeysB=np.delete(rowsB,np.s_[0:2],1)
     print("\npKeysB ")
     print(pKeysB)
@@ -633,6 +651,8 @@ def example_usage():
     ABpair_id = image_ids_to_pair_id(camA_image_id, camB_image_id)
     print(ABpair_id)
     canonCamA_B_Matches = db.execute("SELECT * from matches where pair_id='"+str(ABpair_id)+"'")
+    print (canonCamA_B_Matches)
+
     thepair_id_Matches, rowsM, colsM, MatchesdataBlob  = next(canonCamA_B_Matches)
     Matches_arrayA_B = np.frombuffer(MatchesdataBlob, np.uint32).reshape(rowsM, colsM)
     
