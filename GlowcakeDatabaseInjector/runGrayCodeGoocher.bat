@@ -1,1 +1,1 @@
-py GlowcakeDatabaseGoocher.py --db wtf.db  --projWidth 3840 --projHeight 2160 --projImage white3840.png
+py GlowcakeDatabaseGoocher_KeypointReducer.py --db SSI_B.db  --projWidth 3840 --projHeight 2160 --projImage white3840.png --skipInterval 100
