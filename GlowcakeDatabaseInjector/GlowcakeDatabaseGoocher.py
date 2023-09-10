@@ -254,13 +254,17 @@ def example_usage():
     parser.add_argument("--projWidth", default="1920")
     parser.add_argument("--projHeight", default="1080")
     parser.add_argument("--projImage", default="white1920.png")
+    parser.add_argument("--skipInterval", default="1")
 
 
     args = parser.parse_args()
 
-    shutil.copy(args.db,args.db+"new.db")
+    #rowsA = ONLYTAKE EVERY Xth entry
+    skipinterval=int(args.skipInterval)
+    newDBname = args.db+"_"+str(skipinterval)+"new.db"
+    shutil.copy(args.db, newDBname)
 
-    if os.path.exists(args.db+"new.db"):
+    if os.path.exists(newDBname):
         print("Good! database path already exists -- .")
         print("let's fuck it up")
     #    return
@@ -270,10 +274,10 @@ def example_usage():
         print(args.camAPoints)
     #    return
 
-    
+
     # Open the database.
     
-    db = COLMAPDatabase.connect(args.db+"new.db")
+    db = COLMAPDatabase.connect(newDBname)
     print("database opened")
 
     # For convenience, try creating all the tables upfront.
@@ -378,7 +382,13 @@ def example_usage():
     print('Field names are:' + ', '.join(field for field in fieldsA))
 
 
-    
+    print("before and after reduction")
+    print(len(rowsA))
+    rowsA=rowsA[0::skipinterval]
+    print(len(rowsA))
+   
+   
+   
     #CAMERA B GRAYCODE CSV
     # initializing the titles and rows list
     fieldsB = []
@@ -398,9 +408,15 @@ def example_usage():
     # get total number of rows
         print("Total no. of rows (Cam B): %d"%(csvreaderB.line_num))
         totalRowsB = csvreaderB.line_num
-    # printing the field names
+    # printing the field names  
     print('Field names are:' + ', '.join(field for field in fieldsB))
-   
+
+    print("before and after reduction")
+    
+    print(len(rowsB))
+    rowsB=rowsB[0::skipinterval]
+    print(len(rowsB))
+
 
     #------------Add keypoints-------------------
 
