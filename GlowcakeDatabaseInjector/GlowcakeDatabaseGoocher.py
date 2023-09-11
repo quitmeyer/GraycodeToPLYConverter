@@ -255,14 +255,14 @@ def example_usage():
     parser.add_argument("--projWidth", default="1920")
     parser.add_argument("--projHeight", default="1080")
     parser.add_argument("--projImage", default="white1920.png")
-    parser.add_argument("--skipInterval", default="1")
+    parser.add_argument("--subSample", default="1")
 
 
     args = parser.parse_args()
 
     #rowsA = ONLYTAKE EVERY Xth entry
-    skipinterval=int(args.skipInterval)
-    newDBname = args.db+"_"+str(skipinterval)+"new.db"
+    subSample=int(args.subSample)
+    newDBname = args.db+"_"+str(subSample)+"new.db"
     shutil.copy(args.db, newDBname)
 
     if os.path.exists(newDBname):
@@ -386,7 +386,7 @@ def example_usage():
     print("before and after reduction")
     print(len(rowsA))
     rowsAorig=rowsA.copy()
-    #rowsA = random.sample(rowsA,skipinterval)
+    rowsA = random.sample(rowsA,subSample)
     #rowsA=rowsA[0::skipinterval]
     print(len(rowsA))
    
@@ -418,7 +418,7 @@ def example_usage():
     
     print(len(rowsB))
     rowsBorig=rowsB.copy()
-    #rowsB = random.sample(rowsB,skipinterval)
+    rowsB = random.sample(rowsB,subSample)
     #rowsB=rowsB[0::skipinterval]
     print(len(rowsB))
 
