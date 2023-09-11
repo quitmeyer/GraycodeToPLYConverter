@@ -39,6 +39,7 @@ import numpy as np
 import csv
 import shutil
 import pandas as pd
+import random
 
 IS_PYTHON3 = sys.version_info[0] >= 3
 
@@ -384,7 +385,9 @@ def example_usage():
 
     print("before and after reduction")
     print(len(rowsA))
-    rowsA=rowsA[0::skipinterval]
+    rowsAorig=rowsA.copy()
+    #rowsA = random.sample(rowsA,skipinterval)
+    #rowsA=rowsA[0::skipinterval]
     print(len(rowsA))
    
    
@@ -414,7 +417,9 @@ def example_usage():
     print("before and after reduction")
     
     print(len(rowsB))
-    rowsB=rowsB[0::skipinterval]
+    rowsBorig=rowsB.copy()
+    #rowsB = random.sample(rowsB,skipinterval)
+    #rowsB=rowsB[0::skipinterval]
     print(len(rowsB))
 
 
@@ -556,7 +561,7 @@ def example_usage():
 
     #CAM A - PROJ
     # create the indices of aligned matches between CAM A and PROJ
-    arrA = np.arange(canCamAKeypointsOrigIndex, canCamAKeypointsOrigIndex+numofKeypointsAddedA, 1)
+    arrA = np.arange(canCamAKeypointsOrigIndex+1, canCamAKeypointsOrigIndex+1+numofKeypointsAddedA, 1)
     arrP_A = np.arange(0,numofKeypointsAddedA, 1)
 
     matches_CA_P = np.array([arrA,arrP_A])
@@ -568,15 +573,15 @@ def example_usage():
     print(matches_CA_P.shape)
     print(matches_CA_P)
 
-    db.add_matches(camA_image_id,proj_image_id,matches_CA_P)
+    db.add_matches(camA_image_id,proj_image_id,matches_CA_P)    
     #db.update_two_view_geometries( matches_CA_P, image_ids_to_pair_id(camA_image_id,proj_image_id))
     db.add_two_view_geometry(camA_image_id,proj_image_id,matches_CA_P) 
 
     #CAM B - PROJ
-    # create the indices of aligned matches between CAM A and PROJ
-    arrB = np.arange(canCamBKeypointsOrigIndex, canCamBKeypointsOrigIndex+numofKeypointsAddedB, 1)
+    # create the indices of aligned matches between CAM B and PROJ
+    arrB = np.arange(canCamBKeypointsOrigIndex+1, canCamBKeypointsOrigIndex+1+numofKeypointsAddedB, 1)
     arrP_B = np.arange(numofKeypointsAddedA,numofKeypointsAddedA+ numofKeypointsAddedB, 1) #the keypoints for the projector for camB were appended to the projector's list of keypoints
-    #NOTE possible off-by-one error above
+    #NOTE possible off-by-one error above !!!
 
     matches_CB_P = np.array([arrB,arrP_B])
 
@@ -692,6 +697,7 @@ def example_usage():
         #Matches_A_B= Matches_A_B[ np.random.choice(numofMATCHESAddedA,5,replace=False)]  #Note with the random choice, these WONT be the same as the TVG
     
     numofMATCHESAddedA=Matches_A_B.shape[0]
+    #QUICKHACK
     augmentedMatchesArrayAB = np.append(Matches_arrayA_B, Matches_A_B)
     print(numofMATCHESAddedA)
     #reshape it back how the database likes it
