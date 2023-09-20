@@ -256,13 +256,15 @@ def example_usage():
     parser.add_argument("--projHeight", default="1080")
     parser.add_argument("--projImage", default="white1920.png")
     parser.add_argument("--subSample", default="1")
+    parser.add_argument("--camModel", default="SimplePinhole")
+
 
 
     args = parser.parse_args()
 
     #rowsA = ONLYTAKE EVERY Xth entry
     subSample=int(args.subSample)
-    newDBname = args.db+"_"+str(subSample)+"new.db"
+    newDBname = args.db[:-3]+"_"+str(subSample)+"_new.db"
     shutil.copy(args.db, newDBname)
 
     if os.path.exists(newDBname):
@@ -322,39 +324,61 @@ def example_usage():
 
 			//1920 x 1080  big projector 35.1	    0.6126105675
 		   // 1366 x 768 small projector 72.88	1.271995959
+           # 3840 2160 is big 4k projector
 
 			float d = sqrt(powf(w, 2) + powf(h, 2));
 			float f = (d / 2) * cos(diagnonalFOV / 2) / sin(diagnonalFOV / 2);  // old guess  1.732; // 1.732 = cotangent(1.0472/2) where 1.0472 is 60 degrees in radians)
-
 			cameraMatrixG.at< float >(0, 0) = f;
 			cameraMatrixG.at< float >(1, 1) = f;
 			cameraMatrixG.at< float >(0, 2) = w / 2; // assume it's about in the center
 			cameraMatrixG.at< float >(1, 2) = h / 2; // assume it's about in the center
 
     """
-    # Create dummy cameras.
 
-    #model1, width1, height1, params1 = \
-    #    0, 1024, 768, np.array((1024., 512., 384.))
-    #model2, width2, height2, params2 = \
-    #    2, 1024, 768, np.array((1024., 512., 384., 0.1))
+    #Create dummy camera for the projector
+            # in colmap model 4 is OPENCV, 0 is simple pinhole  2 is simple radial
+    """
+             in colmap we could do " SIMPLE RADIAL model" which has
 
-    #create dummy camera for the projector
-        # model 4 is OPENCV, 0 is simple pinhole  2 is simple radial
+            " f, cx, cy, k  (If we just ignore k2 and k3)
+
+            or RADIAL CAMERA model
+
+            f, cx, cy, k1, k2 (if we ignore k3)
+
+
+            there's also
+            SIMPLE RADIAL FISHEYE
+            f, cx, cy, k
+
+            and that seems to be it of our stock blender options
+    """
+
+    match args.camModel:
+        case "SimplePinhole":
+                p_model1, p_width1, p_height1, p_params1 =  0, args.projWidth, args.projHeight, np.array((5000, int(args.projWidth)/2, int(args.projHeight)/2)) #you need this many arguments for an SIMPLE PINHOLE param or it will crash everything
+                p_camera_id1 = db.add_camera(p_model1, p_width1, p_height1, p_params1)
+                print("added the "+args.camModel+" projector camera with id = "+str(p_camera_id1))
+
+        case "SimpleRadial":
+                p_model1, p_width1, p_height1, p_params1 =  2, args.projWidth, args.projHeight, np.array((5000, int(args.projWidth)/2, int(args.projHeight)/2,0)) #you need this many arguments for an SIMPLE RADIAL param or it will crash everything
+                p_camera_id1 = db.add_camera(p_model1, p_width1, p_height1, p_params1)
+                print("added the "+args.camModel+" projector camera with id = "+str(p_camera_id1))
+        case "OpenCV":
+                p_model1, p_width1, p_height1, p_params1 =  2, args.projWidth, args.projHeight, np.array((5000, int(args.projWidth)/2, int(args.projHeight)/2,0,0,0,0)) #you need this many arguments for an SIMPLE RADIAL param or it will crash everything
+                p_camera_id1 = db.add_camera(p_model1, p_width1, p_height1, p_params1)
+                print("added the "+args.camModel+" projector camera with id = "+str(p_camera_id1))
+
         #values taken from guess calculations
     #p_model1, p_width1, p_height1, p_params1 =  4, 1366, 768, np.array((1.732,1.732, 1366/2, 768/2,0,0,0,0)) #you need this many arguments for an openCV param or it will crash everything
     #p_model1, p_width1, p_height1, p_params1 =  4, 1920, 1080, np.array((1.732,1.732, 1920/2, 1080/2,0,0,0,0)) #you need this many arguments for an openCV param or it will crash everything
     #p_model1, p_width1, p_height1, p_params1 =  4, 3840, 2160, np.array((1.732,1.732, 3840/2, 2160/2,0,0,0,0)) #you need this many arguments for an openCV param or it will crash everything
-    p_model1, p_width1, p_height1, p_params1 =  4, args.projWidth, args.projHeight, np.array((1.732,1.732, int(args.projWidth)/2, int(args.projHeight)/2,0,0,0,0)) #you need this many arguments for an openCV param or it will crash everything
-
-    p_camera_id1 = db.add_camera(p_model1, p_width1, p_height1, p_params1)
-    print("added the projector camera with id = "+str(p_camera_id1))
-
-    # Create Graycode Match images.
+    #opencv model
+    #p_model1, p_width1, p_height1, p_params1 =  4, args.projWidth, args.projHeight, np.array((1.732,1.732, int(args.projWidth)/2, int(args.projHeight)/2,0,0,0,0)) #you need this many arguments for an openCV param or it will crash everything
     
-    #proj_image_id = db.add_image("projector/white1366.png", p_camera_id1) #fake graycode from projector
-    #proj_image_id = db.add_image("projector/white1920.png", p_camera_id1) #fake graycode from projector
-    #proj_image_id = db.add_image("projector/white3840.png", p_camera_id1) #fake graycode from projector
+    #Set to Simple Pinhole instead of openCV model
+
+    # Create the Image for the Projector
     proj_image_id = db.add_image("projector/"+args.projImage, p_camera_id1) #fake graycode from projector
 
 
@@ -386,7 +410,8 @@ def example_usage():
     print("before and after reduction")
     print(len(rowsA))
     rowsAorig=rowsA.copy()
-    rowsA = random.sample(rowsA,subSample)
+    if(subSample>0):
+        rowsA = random.sample(rowsA,subSample)
     #rowsA=rowsA[0::skipinterval]
     print(len(rowsA))
    
@@ -415,10 +440,11 @@ def example_usage():
     print('Field names are:' + ', '.join(field for field in fieldsB))
 
     print("before and after reduction")
-    
+   
     print(len(rowsB))
     rowsBorig=rowsB.copy()
-    rowsB = random.sample(rowsB,subSample)
+    if(subSample>0):
+        rowsB = random.sample(rowsB,subSample)
     #rowsB=rowsB[0::skipinterval]
     print(len(rowsB))
 
@@ -581,7 +607,6 @@ def example_usage():
     # create the indices of aligned matches between CAM B and PROJ
     arrB = np.arange(canCamBKeypointsOrigIndex+1, canCamBKeypointsOrigIndex+1+numofKeypointsAddedB, 1)
     arrP_B = np.arange(numofKeypointsAddedA,numofKeypointsAddedA+ numofKeypointsAddedB, 1) #the keypoints for the projector for camB were appended to the projector's list of keypoints
-    #NOTE possible off-by-one error above !!!
 
     matches_CB_P = np.array([arrB,arrP_B])
 
