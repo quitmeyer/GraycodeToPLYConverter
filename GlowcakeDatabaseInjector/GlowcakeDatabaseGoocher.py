@@ -450,7 +450,7 @@ def example_usage():
 
 #-------------Create Mega Database of only matches from the CSVs --- for right now, we don't care about graycode points that only Cam A saw or just CAM B, we want full triangle
     # # create the indices of aligned matches between CAM A and CAM B
-    print("-----Creating Matches between Cam A and Cam B-------") 
+    print("-----Creating Main Array of Matches from CSV files-------") 
 
     
     # RUN PANDAS for database matching
@@ -614,49 +614,50 @@ def example_usage():
     #pKeysA_pKeysB = np.vstack((pKeysA,pKeysB))  #have to use vstack and put in double parentheses for some weird reason
     db.add_keypoints(proj_image_id, pKeys)
 
+
+    #------------ !Matches! --------------------------------------------
     # -------- Add Projector matches to matches and  two_view_geometries ----------
 
-    print("-----Creating Matches between Proj and (CamA and Cam B)-------") 
+    print("-------Creating Matches between Proj and each cam-------") 
 
     #CAM A - PROJ
     # create the indices of aligned matches between CAM A and PROJ
-    arrA = np.arange(canCamAKeypointsOrigIndex+1, canCamAKeypointsOrigIndex+1+numofKeypointsAddedA, 1)
-    arrP_A = np.arange(0,numofKeypointsAddedA, 1)
+    arrA = np.arange(canCamAKeypointsOrigIndex+1, canCamAKeypointsOrigIndex+1+totalNewKeypoints, 1)
+    arrP_A = np.arange(0,totalNewKeypoints, 1)
 
-    matches_CA_P = np.array([arrA,arrP_A])
+    matches_A_P = np.array([arrA,arrP_A])
 
-    print("matches_CA_P:")
-    print(matches_CA_P.shape)
-    print(matches_CA_P)
-    matches_CA_P =matches_CA_P.T #have to transpose it
-    print(matches_CA_P.shape)
-    print(matches_CA_P)
+    print("matches_A_P:")
+    print(matches_A_P.shape)
+    print(matches_A_P)
+    matches_A_P =matches_A_P.T #have to transpose it
+    print(matches_A_P.shape)
+    print(matches_A_P)
 
-    db.add_matches(camA_image_id,proj_image_id,matches_CA_P)    
-    db.add_two_view_geometry(camA_image_id,proj_image_id,matches_CA_P) 
+    db.add_matches(camA_image_id,proj_image_id,matches_A_P)    
+    db.add_two_view_geometry(camA_image_id,proj_image_id,matches_A_P) 
 
     #CAM B - PROJ
     # create the indices of aligned matches between CAM B and PROJ
-    arrB = np.arange(canCamBKeypointsOrigIndex+1, canCamBKeypointsOrigIndex+1+numofKeypointsAddedB, 1)
-    arrP_B = np.arange(numofKeypointsAddedA,numofKeypointsAddedA+ numofKeypointsAddedB, 1) #the keypoints for the projector for camB were appended to the projector's list of keypoints
+    arrB = np.arange(canCamBKeypointsOrigIndex+1, canCamBKeypointsOrigIndex+1+totalNewKeypoints, 1)
+    arrP_B = np.arange(0, totalNewKeypoints, 1) #the keypoints for the projector for camB were appended to the projector's list of keypoints
 
-    matches_CB_P = np.array([arrB,arrP_B])
+    matches_B_P = np.array([arrB,arrP_B])
 
-    print("matches_CB_P:")
-    print(matches_CB_P.shape)
-    print(matches_CB_P)
-    matches_CB_P =matches_CB_P.T #have to transpose it
-    print(matches_CB_P.shape)
-    print(matches_CB_P)
+    print("matches_B_P:")
+    print(matches_B_P.shape)
+    print(matches_B_P)
+    matches_B_P =matches_B_P.T #have to transpose it
+    print(matches_B_P.shape)
+    print(matches_B_P)
        
-    db.add_matches(camB_image_id,proj_image_id,matches_CB_P)
-    #db.update_two_view_geometries( matches_CA_P, image_ids_to_pair_id(camA_image_id,proj_image_id))
-    db.add_two_view_geometry(camB_image_id,proj_image_id,matches_CB_P) 
+    db.add_matches(camB_image_id,proj_image_id,matches_B_P)
+    db.add_two_view_geometry(camB_image_id,proj_image_id,matches_B_P) 
 
+
+
+    print("-----Creating Matches between Cam A and Cam B-------") 
     #CAM A - Cam B - We should be able to add matches directly now, but these matches are a bit trickier because of how the database works with existing matches
-   
-    
-    
     print("Adding Matches A to B")
 
     #Matches
@@ -678,20 +679,20 @@ def example_usage():
     
     ABpair_id = image_ids_to_pair_id(camA_image_id, camB_image_id)
     print(ABpair_id)
-    canonCamA_B_Matches = db.execute("SELECT * from matches where pair_id='"+str(ABpair_id)+"'")
+    canonCamA_B_MatchesOrig = db.execute("SELECT * from matches where pair_id='"+str(ABpair_id)+"'")
     #print (canonCamA_B_Matches)
 
-    thepair_id_Matches, rowsM, colsM, MatchesdataBlob  = next(canonCamA_B_Matches)
-    Matches_arrayA_B = np.frombuffer(MatchesdataBlob, np.uint32).reshape(rowsM, colsM)
+    thepair_id_Matches, rowsM, colsM, MatchesdataBlob  = next(canonCamA_B_MatchesOrig)
+    Matches_arrayA_B_orig = np.frombuffer(MatchesdataBlob, np.uint32).reshape(rowsM, colsM)
     
     print("pair id for canon cameras images")
     print(thepair_id_Matches)
     print("original TVGpairs Cam A")
-    print(Matches_arrayA_B)
-    print(Matches_arrayA_B.shape)
+    print(Matches_arrayA_B_orig)
+    print(Matches_arrayA_B_orig.shape)
 
     print("last index of orignal Matches ")
-    Matches_OrigIndexA_B =Matches_arrayA_B.shape[0] -1
+    Matches_OrigIndexA_B =Matches_arrayA_B_orig.shape[0] -1
     print(Matches_OrigIndexA_B)
 
     print("_------------------ADDING -----Augmented Matches ---Hopefully ")
@@ -699,7 +700,7 @@ def example_usage():
     numofMATCHESAddedA=totalNewKeypoints
     
     #QUICKHACK
-    augmentedMatchesArrayAB = np.append(Matches_arrayA_B, Matches_A_B)
+    augmentedMatchesArrayAB = np.append(Matches_arrayA_B_orig, Matches_A_B)
     print(numofMATCHESAddedA)
     #reshape it back how the database likes it
     augmentedMatchesArrayAB =augmentedMatchesArrayAB.reshape(rowsM+numofMATCHESAddedA,colsM)
@@ -709,7 +710,7 @@ def example_usage():
     if(onlyOrigs):
         #running a test to not include any original MATCHES
         print("Only original matches") 
-        augmentedMatchesArrayAB = Matches_arrayA_B #this overwrites the augmented matches above
+        augmentedMatchesArrayAB = Matches_arrayA_B_orig #this overwrites the augmented matches above
         augmentedMatchesArrayAB =augmentedMatchesArrayAB.reshape(rowsM,colsM) 
         
 
@@ -735,7 +736,7 @@ def example_usage():
     #canonCamA_B_Matches = db.execute("INSERT or REPLACE INTO matches (pair_id, rows, cols, data) VALUES (?, ?, ?, ?)",data_tuple)
     
     #add to Matches DB
-    canonCamA_B_Matches = db.execute("INSERT or REPLACE INTO matches VALUES (?,?,?,?)",(ABpair_id,)+augmentedMatchesArrayAB.shape+(array_to_blob(augmentedMatchesArrayAB),)) 
+    canonCamA_B_MatchesOrig = db.execute("INSERT or REPLACE INTO matches VALUES (?,?,?,?)",(ABpair_id,)+augmentedMatchesArrayAB.shape+(array_to_blob(augmentedMatchesArrayAB),)) 
     
     #db.add_matches(camA_image_id, camB_image_id, augmentedMatchesArrayA) # possibly incorrect method of adding matches right now
  
@@ -750,11 +751,7 @@ def example_usage():
     TVGarrayA_B = np.frombuffer(TVGdataBlob, np.uint32).reshape(rows, cols)
     
 
-    '''
-      "INSERT INTO two_view_geometries VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (pair_id,) + matches.shape + (array_to_blob(matches), config,
-             array_to_blob(F), array_to_blob(E), array_to_blob(H)))
-    '''
+
     print("pair id for canon cameras images")
     print(thepair_id)
     print("original TVGpairs Cam A")
@@ -835,7 +832,7 @@ def example_usage():
         print(augmentedKeypointArrayB[augmentedTVGpairsArrayAB[numofTVGpairsAddedA-1][1]])
     #add to two view geometries
     db.update_two_view_geometries(augmentedTVGpairsArrayAB, thepair_id)
-
+    
 
     '''
  
