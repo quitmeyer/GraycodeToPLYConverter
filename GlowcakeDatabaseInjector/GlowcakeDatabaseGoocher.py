@@ -546,10 +546,7 @@ def example_usage():
 
     canonCamA = db.execute("INSERT or REPLACE INTO keypoints (image_id, rows, cols, data) VALUES (?, ?, ?, ?)",data_tuple)
 
-    cam_width = 4096
-    cam_height = 2160
-    #cKeysA = -2160+cKeysA
-    #print(cKeysA)
+
 
     #---------B----------------
     #repeat the process for Cam B
@@ -661,18 +658,21 @@ def example_usage():
     print("Adding Matches A to B")
 
     #Matches
-    Matches_A_B = np.array([arrA,arrB])
+
+    newMatches_A_B = np.array([arrA,arrB])
+    newMatches_A_B =newMatches_A_B.T #have to transpose it
+
 
     #TVGPairs
-    TVGpairs_A_B = np.array([arrA,arrB])
-    
+    newTVGpairs_A_B = np.array([arrA,arrB])
+    newTVGpairs_A_B = newTVGpairs_A_B.T
     print("matches with correct offset for the keypoints")
-    print(Matches_A_B)
-    print(Matches_A_B.shape)
+    print(newMatches_A_B)
+    print(newMatches_A_B.shape)
 
     print("TVGpairs with correct offset for the keypoints")
-    print(TVGpairs_A_B)
-    print(TVGpairs_A_B.shape)
+    print(newTVGpairs_A_B)
+    print(newTVGpairs_A_B.shape)
 
     #----------------------Inserting the Graycode Matches Canon A to B into the MATCHES database -----------
     print("\n List DB Matches \n -----  ")  
@@ -680,14 +680,13 @@ def example_usage():
     ABpair_id = image_ids_to_pair_id(camA_image_id, camB_image_id)
     print(ABpair_id)
     canonCamA_B_MatchesOrig = db.execute("SELECT * from matches where pair_id='"+str(ABpair_id)+"'")
-    #print (canonCamA_B_Matches)
 
     thepair_id_Matches, rowsM, colsM, MatchesdataBlob  = next(canonCamA_B_MatchesOrig)
     Matches_arrayA_B_orig = np.frombuffer(MatchesdataBlob, np.uint32).reshape(rowsM, colsM)
     
     print("pair id for canon cameras images")
-    print(thepair_id_Matches)
-    print("original TVGpairs Cam A")
+    print(thepair_id_Matches) #should match the one above and does
+    print("original matches Cam A to cam b")
     print(Matches_arrayA_B_orig)
     print(Matches_arrayA_B_orig.shape)
 
@@ -700,28 +699,12 @@ def example_usage():
     numofMATCHESAddedA=totalNewKeypoints
     
     #QUICKHACK
-    augmentedMatchesArrayAB = np.append(Matches_arrayA_B_orig, Matches_A_B)
+    augmentedMatchesArrayAB = np.append(Matches_arrayA_B_orig, newMatches_A_B)
     print(numofMATCHESAddedA)
     #reshape it back how the database likes it
     augmentedMatchesArrayAB =augmentedMatchesArrayAB.reshape(rowsM+numofMATCHESAddedA,colsM)
-
-    #another test - just having the originals and nothing else
-    onlyOrigs=False
-    if(onlyOrigs):
-        #running a test to not include any original MATCHES
-        print("Only original matches") 
-        augmentedMatchesArrayAB = Matches_arrayA_B_orig #this overwrites the augmented matches above
-        augmentedMatchesArrayAB =augmentedMatchesArrayAB.reshape(rowsM,colsM) 
-        
-
-
-    removeOrigMatches=False
-    if(removeOrigMatches):
-        #running a test to not include any original MATCHES
-        print("Not keeping original of Matches") 
-        augmentedMatchesArrayAB = Matches_A_B #this overwrites the augmented matches above
-        augmentedMatchesArrayAB =augmentedMatchesArrayAB.reshape(numofMATCHESAddedA,colsM) 
-        
+ 
+    
     print("Matches data array augmented")
     print(augmentedMatchesArrayAB.shape)
 
@@ -730,63 +713,46 @@ def example_usage():
     print(augmentedMatchesArrayAB)
 
     #put those matches into that database!
-    data_tuple = (ABpair_id, augmentedMatchesArrayAB.shape[0], augmentedMatchesArrayAB.shape[1],array_to_blob(augmentedMatchesArrayAB))
-    
-    #put the full list of matches into the database
+    #data_tuple = (ABpair_id, augmentedMatchesArrayAB.shape[0], augmentedMatchesArrayAB.shape[1],array_to_blob(augmentedMatchesArrayAB)) #this method also works
     #canonCamA_B_Matches = db.execute("INSERT or REPLACE INTO matches (pair_id, rows, cols, data) VALUES (?, ?, ?, ?)",data_tuple)
     
     #add to Matches DB
     canonCamA_B_MatchesOrig = db.execute("INSERT or REPLACE INTO matches VALUES (?,?,?,?)",(ABpair_id,)+augmentedMatchesArrayAB.shape+(array_to_blob(augmentedMatchesArrayAB),)) 
-    
-    #db.add_matches(camA_image_id, camB_image_id, augmentedMatchesArrayA) # possibly incorrect method of adding matches right now
+    print("matches added to database A-B")
+    #db.add_matches(camA_image_id, camB_image_id, augmentedMatchesArrayAB) # can only use this function if there are no prio matches
  
 
 
     #----------------------Inserting the Graycode Matches Canon A to B into the TVG database -----------
     print("\n List TVGpairs \n -----  ")  
     
-    canonCamA_B_TVGpairs = db.execute("SELECT * from two_view_geometries where pair_id='"+str(ABpair_id)+"'")
+    canonCamA_B_TVGpairs_orig = db.execute("SELECT * from two_view_geometries where pair_id='"+str(ABpair_id)+"'")
 
-    thepair_id, rows, cols, TVGdataBlob, config, F, E, H, extraBullshitA, extrabullshitB  = next(canonCamA_B_TVGpairs)
-    TVGarrayA_B = np.frombuffer(TVGdataBlob, np.uint32).reshape(rows, cols)
+    thepair_id, rows, cols, TVGdataBlob, config, F, E, H, extraBullshitA, extrabullshitB  = next(canonCamA_B_TVGpairs_orig)
+    TVGarrayA_B_orig = np.frombuffer(TVGdataBlob, np.uint32).reshape(rows, cols)
     
 
 
     print("pair id for canon cameras images")
     print(thepair_id)
     print("original TVGpairs Cam A")
-    print(TVGarrayA_B)
-    print(TVGarrayA_B.shape)
+    print(TVGarrayA_B_orig)
+    print(TVGarrayA_B_orig.shape)
 
     print("last index of orignal TVGpairs ")
-    TVGpairsOrigIndexA_B =TVGarrayA_B.shape[0] -1
+    TVGpairsOrigIndexA_B =TVGarrayA_B_orig.shape[0] -1
     print(TVGpairsOrigIndexA_B)
 
     print("_------------------ADDING -----Augmented TVG Pairs ---Hopefully ")
     
     numofTVGpairsAddedA=totalNewKeypoints
-    augmentedTVGpairsArrayAB = np.append(TVGarrayA_B, TVGpairs_A_B)
+    augmentedTVGpairsArrayAB = np.append(TVGarrayA_B_orig, newTVGpairs_A_B)
     print(numofTVGpairsAddedA)
 
     #reshape it back how the database likes it
     augmentedTVGpairsArrayAB =augmentedTVGpairsArrayAB.reshape(rows+numofTVGpairsAddedA,cols)
 
-    #another test - just having the originals and nothing else
-    if(onlyOrigs):
-        #running a test to not include any original MATCHES
-        print("Only original TVGs") 
-        augmentedTVGpairsArrayAB = TVGarrayA_B #this overwrites the augmented matches above
-        augmentedTVGpairsArrayAB =augmentedTVGpairsArrayAB.reshape(rows,cols) 
-
-
-    if(removeOrigMatches):
-        #running a test to not include any original TVG pairs
-        print("Not keeping originals") 
     
-        augmentedTVGpairsArrayAB = TVGpairs_A_B #this overwrites the call above
-        augmentedTVGpairsArrayAB =augmentedTVGpairsArrayAB.reshape(numofTVGpairsAddedA,cols)
-        
-
     print("TVGpairs data array augmented")
     print(augmentedTVGpairsArrayAB.shape)
 
@@ -799,7 +765,7 @@ def example_usage():
     
     #put the full list of matches into the database
     #canonCamA_B_Matches = db.execute("INSERT or REPLACE INTO matches (pair_id, rows, cols, data) VALUES (?, ?, ?, ?)",data_tuple)
-    canonCamA_B_TVGpairs = db.execute("UPDATE two_view_geometries SET config=5 where pair_id=2147483701 ") #testing manually setting the config of the two view geoms
+    #canonCamA_B_TVGpairs_orig = db.execute("UPDATE two_view_geometries SET config=5 where pair_id=2147483701 ") #testing manually setting the config of the two view geoms
 
 
     #run some tests to make sure our indicies are correct.
@@ -809,27 +775,13 @@ def example_usage():
     #
     # 
     #   
+    #print("first graycode match")
+    #print(augmentedTVGpairsArrayA[TVGpairsOrigIndexA_B+1])
+    print("first graycode matches Keypoints")
+    print(augmentedKeypointArrayA[ augmentedTVGpairsArrayAB[TVGpairsOrigIndexA_B+1][0]])
+    print(augmentedKeypointArrayB[ augmentedTVGpairsArrayAB[TVGpairsOrigIndexA_B+1][1]])
+   
 
-    if(removeOrigMatches==FALSE):
-        print("last TVGSIFT match")
-        # print(augmentedTVGpairsArrayA[TVGpairsOrigIndexA_B])
-        print("LAST sift matches Keypoints")
-        print(augmentedKeypointArrayA[ augmentedTVGpairsArrayAB[TVGpairsOrigIndexA_B][0]])
-        print(augmentedKeypointArrayB[ augmentedTVGpairsArrayAB[TVGpairsOrigIndexA_B][1]])
-    if(onlyOrigs==False and removeOrigMatches==False):
-
-        #print("first graycode match")
-        #print(augmentedTVGpairsArrayA[TVGpairsOrigIndexA_B+1])
-        print("first graycode matches Keypoints")
-        print(augmentedKeypointArrayA[ augmentedTVGpairsArrayAB[TVGpairsOrigIndexA_B+1][0]])
-        print(augmentedKeypointArrayB[ augmentedTVGpairsArrayAB[TVGpairsOrigIndexA_B+1][1]])
-    else:
-        print("first graycode TVGs Keypoints")
-        print(augmentedKeypointArrayA[augmentedTVGpairsArrayAB[0][0]])
-        print(augmentedKeypointArrayB[augmentedTVGpairsArrayAB[0][1]])
-        print("Last graycode TVGs Keypoints")
-        print(augmentedKeypointArrayA[augmentedTVGpairsArrayAB[numofTVGpairsAddedA-1][0]])
-        print(augmentedKeypointArrayB[augmentedTVGpairsArrayAB[numofTVGpairsAddedA-1][1]])
     #add to two view geometries
     db.update_two_view_geometries(augmentedTVGpairsArrayAB, thepair_id)
     
