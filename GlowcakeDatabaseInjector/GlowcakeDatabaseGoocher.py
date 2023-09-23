@@ -356,16 +356,16 @@ def example_usage():
 
     match args.camModel:
         case "SimplePinhole":
-                p_model1, p_width1, p_height1, p_params1 =  0, args.projWidth, args.projHeight, np.array((5000, int(args.projWidth)/2, int(args.projHeight)/2)) #you need this many arguments for an SIMPLE PINHOLE param or it will crash everything
+                p_model1, p_width1, p_height1, p_params1 =  0, args.projWidth, args.projHeight, np.array((5400, int(args.projWidth)/2, int(args.projHeight)*.8)) #you need this many arguments for an SIMPLE PINHOLE param or it will crash everything
                 p_camera_id1 = db.add_camera(p_model1, p_width1, p_height1, p_params1)
                 print("added the "+args.camModel+" projector camera with id = "+str(p_camera_id1))
 
         case "SimpleRadial":
-                p_model1, p_width1, p_height1, p_params1 =  2, args.projWidth, args.projHeight, np.array((5000, int(args.projWidth)/2, int(args.projHeight)/2,0)) #you need this many arguments for an SIMPLE RADIAL param or it will crash everything
+                p_model1, p_width1, p_height1, p_params1 =  2, args.projWidth, args.projHeight, np.array((5400, int(args.projWidth)/2, int(args.projHeight)*.8,0)) #you need this many arguments for an SIMPLE RADIAL param or it will crash everything
                 p_camera_id1 = db.add_camera(p_model1, p_width1, p_height1, p_params1)
                 print("added the "+args.camModel+" projector camera with id = "+str(p_camera_id1))
         case "OpenCV":
-                p_model1, p_width1, p_height1, p_params1 =  2, args.projWidth, args.projHeight, np.array((5000, int(args.projWidth)/2, int(args.projHeight)/2,0,0,0,0)) #you need this many arguments for an SIMPLE RADIAL param or it will crash everything
+                p_model1, p_width1, p_height1, p_params1 =  2, args.projWidth, args.projHeight, np.array((5400, int(args.projWidth)/2, int(args.projHeight)*.8,0,0,0,0)) #you need this many arguments for an SIMPLE RADIAL param or it will crash everything
                 p_camera_id1 = db.add_camera(p_model1, p_width1, p_height1, p_params1)
                 print("added the "+args.camModel+" projector camera with id = "+str(p_camera_id1))
 
@@ -448,6 +448,54 @@ def example_usage():
     #rowsB=rowsB[0::skipinterval]
     print(len(rowsB))
 
+#-------------Create Mega Database of only matches from the CSVs --- for right now, we don't care about graycode points that only Cam A saw or just CAM B, we want full triangle
+    # # create the indices of aligned matches between CAM A and CAM B
+    print("-----Creating Matches between Cam A and Cam B-------") 
+
+    
+    # RUN PANDAS for database matching
+    print("Starting Intersection of two CSV files with PANDAS") 
+    np_rowsA=np.asarray(rowsA)
+    dA = pd.DataFrame(np_rowsA) 
+    therows, thecolumns = np_rowsA.shape
+    idx_a =np.arange(0, therows, 1)
+    dA = dA.assign(idxA=idx_a)
+    print("dataframeA: ")
+    print(dA) 
+
+    np_rowsB=np.asarray(rowsB)
+    dB = pd.DataFrame(np_rowsB)
+    therowsB, thecolumnsB = np_rowsB.shape
+    idx_b =np.arange(0, therowsB, 1)
+    dB = dB.assign(idxB=idx_b)
+    print("dataframeB: ")
+    print(dB) 
+
+
+    # Calling pandas merge() function #We are only looking at places where the 
+    int_dfAtoB = pd.merge(dA, dB, how ='inner', on =[2, 3]) 
+
+    print("All Matched Rows between A to B")    
+    print(int_dfAtoB)
+
+
+    print("Remove duplicate indicies")  #there don't be any change when this is run  with JUST drop_duplicates
+    # attempting to remove all in specific columns using subset command df.drop_duplicates(subset=[‘Color’])   
+    int_dfAtoB_noDups = int_dfAtoB.drop_duplicates(subset=['idxA']) #drop duplicates of colA
+    int_dfAtoB_noDups = int_dfAtoB_noDups.drop_duplicates(subset=['idxB']) #drop duplicates of colB
+
+    print(int_dfAtoB_noDups)
+
+    
+    print("Pandas converted to numpy array")
+    mainArray = int_dfAtoB_noDups.to_numpy()
+    print("This is the main array that holds all our keypoints found in CamA Proj and CamB \n It's arranged as XcA YcA Xp Yp (index of original CSVA) XcB YcB (indx b) ")
+
+    print(mainArray)
+
+    print("Total amount of augmented keypoints")
+    totalNewKeypoints = mainArray.shape[0]
+    print(totalNewKeypoints)
 
     #------------Add keypoints-------------------
 
@@ -471,7 +519,7 @@ def example_usage():
     #add the keypoints
 
     #Graycode Keypoints for Cam A
-    cKeysA = np.delete(rowsA,np.s_[2:4],1)
+    cKeysA = np.delete(mainArray,np.s_[2:8],1)
     print("cKeysA ")
     print(cKeysA)
     print(cKeysA.shape)
@@ -503,7 +551,6 @@ def example_usage():
     #cKeysA = -2160+cKeysA
     #print(cKeysA)
 
-
     #---------B----------------
     #repeat the process for Cam B
     #Graycode Keypoints for Cam B
@@ -525,7 +572,9 @@ def example_usage():
     #add the keypoints
 
     #Graycode Keypoints for Cam B
-    cKeysB = np.delete(rowsB,np.s_[2:4],1)
+    cKeysB = np.delete(mainArray,np.s_[0:5],1)
+    cKeysB = np.delete(cKeysB,np.s_[2:3],1)
+
     print("cKeysB ")
     print(cKeysB)
     print(cKeysB.shape)
@@ -555,31 +604,15 @@ def example_usage():
     print("~~ adding keypoints for the Projector ~~~ ")
 
     #Graycode Keypoints for Projector (Projector to CAMERA A GRAYCODE Correspondences)
-    pKeysA=np.delete(rowsA,np.s_[0:2],1)
+    pKeys=np.delete(mainArray,np.s_[4:8],1)
+    pKeys=np.delete(pKeys,np.s_[0:2],1)
+
     print("\npKeysA ")
-    print(pKeysA)
+    print(pKeys)
+    print(pKeys.shape)
 
-    '''
-    print("!!!! dirty HACK ALERT - flipping keypoints for projector !!!")
-    projthang = np.array([[1920,1080]])
-    print(projthang)
-    pKeysA=projthang -pKeysA
-    #np.subtract(pKeysA[ :, 1], 1080, out=pKeysA[ :, 1])
-    print(pKeysA)
-    '''
-    pKeysB=np.delete(rowsB,np.s_[0:2],1)
-    print("\npKeysB ")
-    print(pKeysB)
-    
-    pKeysA_pKeysB = np.vstack((pKeysA,pKeysB))  #have to use vstack and put in double parentheses for some weird reason
-
-    print("\npKeysA and B ")
-    print(pKeysA_pKeysB)
-
-    db.add_keypoints(proj_image_id, pKeysA_pKeysB) #have to add both at once
-
-
-
+    #pKeysA_pKeysB = np.vstack((pKeysA,pKeysB))  #have to use vstack and put in double parentheses for some weird reason
+    db.add_keypoints(proj_image_id, pKeys)
 
     # -------- Add Projector matches to matches and  two_view_geometries ----------
 
@@ -600,7 +633,6 @@ def example_usage():
     print(matches_CA_P)
 
     db.add_matches(camA_image_id,proj_image_id,matches_CA_P)    
-    #db.update_two_view_geometries( matches_CA_P, image_ids_to_pair_id(camA_image_id,proj_image_id))
     db.add_two_view_geometry(camA_image_id,proj_image_id,matches_CA_P) 
 
     #CAM B - PROJ
@@ -621,67 +653,17 @@ def example_usage():
     #db.update_two_view_geometries( matches_CA_P, image_ids_to_pair_id(camA_image_id,proj_image_id))
     db.add_two_view_geometry(camB_image_id,proj_image_id,matches_CB_P) 
 
-
-
-
-
-    #~~~~~~~~~~~~ CAM A - CAM B TWO VIEW GEOMETRIES ~~~~~~~~~~~~~~~~~
-    # # create the indices of aligned matches between CAM A and CAM B
-    print("-----Creating Matches between Cam A and Cam B-------") 
-
+    #CAM A - Cam B - We should be able to add matches directly now, but these matches are a bit trickier because of how the database works with existing matches
+   
     
-    # RUN PANDAS for database matching
-    print("Starting Intersection of two dataframes with PANDAS") 
     
-    dA = pd.DataFrame(pKeysA) 
-    therows, thecolumns = pKeysA.shape
-    idx_a =np.arange(0, therows, 1)
-    dA = dA.assign(idxA=idx_a)
-    print("dataframeA: ")
-    print(dA) 
-
-    dB = pd.DataFrame(pKeysB)
-    therowsB, thecolumns = pKeysB.shape
-    idx_b =np.arange(0, therowsB, 1)
-    dB = dB.assign(idxB=idx_b)
-    print("dataframeB: ")
-    print(dB) 
-
-    # Calling pandas merge() function 
-    int_dfAtoB = pd.merge(dA, dB, how ='inner', on =[0, 1]) 
-
-    print("All Matched Rows between A to B")    
-    print(int_dfAtoB)
-
-
-    print("Remove duplicate indicies")  #there don't be any change when this is run  with JUST drop_duplicates
-    # attempting to remove all in specific columns using subset command df.drop_duplicates(subset=[‘Color’])   
-    int_dfAtoB_noDups = int_dfAtoB.drop_duplicates(subset=['idxA']) #drop duplicates of colA
-    int_dfAtoB_noDups = int_dfAtoB_noDups.drop_duplicates(subset=['idxB']) #drop duplicates of colB
-
-    print(int_dfAtoB_noDups)
-
-    
-    print("Pandas converted to numpy array")
-    npAtoB = int_dfAtoB_noDups.to_numpy()
-    #npAtoB = int_dfAtoB.to_numpy()
-    print(npAtoB)
-    idxs_A_B = np.delete(npAtoB,0,1) #kill first COLUMN
-    idxs_A_B = np.delete(idxs_A_B,0,1) #kill the new first row COLUMN
-    print("these are the indices that correspond to matches from Graycode File from CamA to CamB")
-    print(idxs_A_B)
-    print(idxs_A_B.shape)
-
+    print("Adding Matches A to B")
 
     #Matches
-    Matches_A_B = idxs_A_B 
-
-    Matches_A_B = Matches_A_B +[canCamAKeypointsOrigIndex+1,canCamBKeypointsOrigIndex+1] #ADD THE KEYPOINT OFFSET TO EACH. A and then B #ALERT just added a plus 1!
+    Matches_A_B = np.array([arrA,arrB])
 
     #TVGPairs
-    TVGpairs_A_B = idxs_A_B 
-
-    TVGpairs_A_B = TVGpairs_A_B +[canCamAKeypointsOrigIndex+1,canCamBKeypointsOrigIndex+1] #ADD THE KEYPOINT OFFSET TO EACH. A and then B #ALERT just added a plus 1!
+    TVGpairs_A_B = np.array([arrA,arrB])
     
     print("matches with correct offset for the keypoints")
     print(Matches_A_B)
@@ -689,15 +671,15 @@ def example_usage():
 
     print("TVGpairs with correct offset for the keypoints")
     print(TVGpairs_A_B)
-
     print(TVGpairs_A_B.shape)
+
     #----------------------Inserting the Graycode Matches Canon A to B into the MATCHES database -----------
     print("\n List DB Matches \n -----  ")  
     
     ABpair_id = image_ids_to_pair_id(camA_image_id, camB_image_id)
     print(ABpair_id)
     canonCamA_B_Matches = db.execute("SELECT * from matches where pair_id='"+str(ABpair_id)+"'")
-    print (canonCamA_B_Matches)
+    #print (canonCamA_B_Matches)
 
     thepair_id_Matches, rowsM, colsM, MatchesdataBlob  = next(canonCamA_B_Matches)
     Matches_arrayA_B = np.frombuffer(MatchesdataBlob, np.uint32).reshape(rowsM, colsM)
@@ -714,14 +696,8 @@ def example_usage():
 
     print("_------------------ADDING -----Augmented Matches ---Hopefully ")
 
-    numofMATCHESAddedA=Matches_A_B.shape[0]
-    matchAddLimit=-1
-    if(matchAddLimit>0):
-        print("adding only just a couple Matches for debugging") 
-        Matches_A_B= Matches_A_B[0:matchAddLimit] # this is a test where we are just adding some of the hundreds of thousands of graycode matches
-        #Matches_A_B= Matches_A_B[ np.random.choice(numofMATCHESAddedA,5,replace=False)]  #Note with the random choice, these WONT be the same as the TVG
+    numofMATCHESAddedA=totalNewKeypoints
     
-    numofMATCHESAddedA=Matches_A_B.shape[0]
     #QUICKHACK
     augmentedMatchesArrayAB = np.append(Matches_arrayA_B, Matches_A_B)
     print(numofMATCHESAddedA)
@@ -791,13 +767,7 @@ def example_usage():
 
     print("_------------------ADDING -----Augmented TVG Pairs ---Hopefully ")
     
-    numofTVGpairsAddedA=TVGpairs_A_B.shape[0]
-    if(matchAddLimit>0):
-        print("adding only just a couple tvgpairs for debugging") 
-        TVGpairs_A_B= TVGpairs_A_B[0:matchAddLimit] # #ALERT this is a test where we are just adding some of the hundreds of thousands of graycode matches
-        #TVGpairs_A_B= TVGpairs_A_B[ np.random.choice(numofTVGpairsAddedA,5,replace=False)]
-    
-    numofTVGpairsAddedA=TVGpairs_A_B.shape[0]
+    numofTVGpairsAddedA=totalNewKeypoints
     augmentedTVGpairsArrayAB = np.append(TVGarrayA_B, TVGpairs_A_B)
     print(numofTVGpairsAddedA)
 
@@ -866,24 +836,53 @@ def example_usage():
     #add to two view geometries
     db.update_two_view_geometries(augmentedTVGpairsArrayAB, thepair_id)
 
-    #db.add_matches(proj_image_id, camB_image_id, matches_CB_P) #incorrect method of adding matches right now
- 
-    # Create dummy keypoints.
-    #
-    # Note that COLMAP supports:
-    #      - 2D keypoints: (x, y)
-    #      - 4D keypoints: (x, y, theta, scale)
-    #      - 6D affine keypoints: (x, y, a_11, a_12, a_21, a_22)
- 
-    """ num_keypoints = 1000
-    keypoints1 = np.random.rand(num_keypoints, 2) * (p_width1, p_height1)
-    keypoints2 = np.random.rand(num_keypoints, 2) * (p_width1, p_height1)
-    keypoints3 = np.random.rand(num_keypoints, 2) * (p_width1, p_height1)
-    keypoints4 = np.random.rand(num_keypoints, 2) * (p_width1, p_height1)
 
-    db.add_keypoints(proj_image_id1, keypoints1)
-    db.add_keypoints(image_id2, keypoints2)
-    db.add_keypoints(image_id3, keypoints3) """
+    '''
+ 
+    matches_CA_B = np.array([arrA,arrB])
+
+    print("matches_CA_B:")
+    print(matches_CA_B.shape)
+    print(matches_CA_B)
+    matches_CA_B =matches_CA_B.T #have to transpose it
+    print(matches_CA_B.shape)
+    print(matches_CA_B)
+
+    db.update_two_view_geometries(camA_image_id,camB_image_id,matches_CA_B) 
+    db.update_matches(camA_image_id,camB_image_id,matches_CA_B)    
+    db.update_two_view_geometry(camA_image_id,camB_image_id,matches_CA_B) 
+    '''
+
+    """
+    npAtoB = int_dfAtoB_noDups.to_numpy()
+    #npAtoB = int_dfAtoB.to_numpy()
+    print(npAtoB)
+    idxs_A_B = np.delete(npAtoB,0,1) #kill first COLUMN
+    idxs_A_B = np.delete(idxs_A_B,0,1) #kill the new first row COLUMN
+    print("these are the indices that correspond to matches from Graycode File from CamA to CamB")
+    print(idxs_A_B)
+    print(idxs_A_B.shape)
+
+
+    #Matches
+    Matches_A_B = idxs_A_B 
+
+    Matches_A_B = Matches_A_B +[canCamAKeypointsOrigIndex+1,canCamBKeypointsOrigIndex+1] #ADD THE KEYPOINT OFFSET TO EACH. A and then B #ALERT just added a plus 1!
+
+    #TVGPairs
+    TVGpairs_A_B = idxs_A_B 
+
+    TVGpairs_A_B = TVGpairs_A_B +[canCamAKeypointsOrigIndex+1,canCamBKeypointsOrigIndex+1] #ADD THE KEYPOINT OFFSET TO EACH. A and then B #ALERT just added a plus 1!
+    
+    print("matches with correct offset for the keypoints")
+    print(Matches_A_B)
+    print(Matches_A_B.shape)
+
+    print("TVGpairs with correct offset for the keypoints")
+    print(TVGpairs_A_B)
+
+    print(TVGpairs_A_B.shape)
+    """
 
 
 
