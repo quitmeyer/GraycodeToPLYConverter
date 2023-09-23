@@ -264,7 +264,7 @@ def example_usage():
 
     #rowsA = ONLYTAKE EVERY Xth entry
     subSample=int(args.subSample)
-    newDBname = args.db[:-3]+"_"+str(subSample)+"_new.db"
+    newDBname = args.db[:-3]+"_"+args.camModel+"_"+str(subSample)+"_new.db"
     shutil.copy(args.db, newDBname)
 
     if os.path.exists(newDBname):
@@ -365,7 +365,7 @@ def example_usage():
                 p_camera_id1 = db.add_camera(p_model1, p_width1, p_height1, p_params1)
                 print("added the "+args.camModel+" projector camera with id = "+str(p_camera_id1))
         case "OpenCV":
-                p_model1, p_width1, p_height1, p_params1 =  2, args.projWidth, args.projHeight, np.array((5400, int(args.projWidth)/2, int(args.projHeight)*.8,0,0,0,0)) #you need this many arguments for an SIMPLE RADIAL param or it will crash everything
+                p_model1, p_width1, p_height1, p_params1 =  4, args.projWidth, args.projHeight, np.array((5700, 5200, int(args.projWidth)/2, int(args.projHeight)*.8,0,0,0,0)) #you need this many arguments for an SIMPLE RADIAL param or it will crash everything
                 p_camera_id1 = db.add_camera(p_model1, p_width1, p_height1, p_params1)
                 print("added the "+args.camModel+" projector camera with id = "+str(p_camera_id1))
 
@@ -376,7 +376,7 @@ def example_usage():
     #opencv model
     #p_model1, p_width1, p_height1, p_params1 =  4, args.projWidth, args.projHeight, np.array((1.732,1.732, int(args.projWidth)/2, int(args.projHeight)/2,0,0,0,0)) #you need this many arguments for an openCV param or it will crash everything
     
-    #Set to Simple Pinhole instead of openCV model
+
 
     # Create the Image for the Projector
     proj_image_id = db.add_image("projector/"+args.projImage, p_camera_id1) #fake graycode from projector
