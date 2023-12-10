@@ -364,6 +364,10 @@ def example_usage():
                 p_model1, p_width1, p_height1, p_params1 =  2, args.projWidth, args.projHeight, np.array((5400, int(args.projWidth)/2, int(args.projHeight)*.8,0)) #you need this many arguments for an SIMPLE RADIAL param or it will crash everything
                 p_camera_id1 = db.add_camera(p_model1, p_width1, p_height1, p_params1)
                 print("added the "+args.camModel+" projector camera with id = "+str(p_camera_id1))
+        case "Radial":
+                p_model1, p_width1, p_height1, p_params1 =  3, args.projWidth, args.projHeight, np.array((5400, int(args.projWidth)/2, int(args.projHeight)*.8,0,0)) #you need this many arguments for an SIMPLE RADIAL param or it will crash everything
+                p_camera_id1 = db.add_camera(p_model1, p_width1, p_height1, p_params1)
+                print("added the "+args.camModel+" projector camera with id = "+str(p_camera_id1))
         case "OpenCV":
                 p_model1, p_width1, p_height1, p_params1 =  4, args.projWidth, args.projHeight, np.array((5700, 5200, int(args.projWidth)/2, int(args.projHeight)*.8,0,0,0,0)) #you need this many arguments for an SIMPLE RADIAL param or it will crash everything
                 p_camera_id1 = db.add_camera(p_model1, p_width1, p_height1, p_params1)

@@ -1,1 +1,1 @@
-py GlowcakeDatabaseGoocher.py --db SSI_B.db  --projWidth 3840 --projHeight 2160 --projImage white3840.png --subSample 0 --camModel SimplePinhole
+py GlowcakeDatabaseGoocher.py --db vs_dec5_rad.db  --projWidth 3840 --projHeight 2160 --projImage white3840.png --subSample 0 --camModel Radial
