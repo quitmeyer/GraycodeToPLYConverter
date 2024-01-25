@@ -250,8 +250,8 @@ def example_usage():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--db", default="database.db")
-    parser.add_argument("--camAPoints", default="ProjPointsCamA.CSV")
-    parser.add_argument("--camBPoints", default="ProjPointsCamB.CSV")
+    parser.add_argument("--camAPoints", default="SL/ProjPointsCamA.CSV")
+    parser.add_argument("--camBPoints", default="SL/ProjPointsCamB.CSV")
     parser.add_argument("--projWidth", default="1920")
     parser.add_argument("--projHeight", default="1080")
     parser.add_argument("--projImage", default="white1920.png")

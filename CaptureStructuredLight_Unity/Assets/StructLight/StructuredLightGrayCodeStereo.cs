@@ -576,7 +576,28 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
     {
         introPreview = false;
 
+        Debug.Log("Creating Directories... ");
+        // ** note, maybe we can add the date that a scan was taken to its file path
+
+        
+        DirectoryInfo di = Directory.CreateDirectory("Graycode/img/a/");
+        DirectoryInfo dib = Directory.CreateDirectory("Graycode/img/b/");
+        DirectoryInfo dip = Directory.CreateDirectory("Graycode/img/projector/");
+        DirectoryInfo dipSLa = Directory.CreateDirectory("Graycode/SL/a/");
+        DirectoryInfo dipSLb = Directory.CreateDirectory("Graycode/SL/b/");
+
+
+        //Debug.Log("The directory was created successfully at {0}.",Directory.GetCreationTime("Graycode/imgs/a/"));
+
+        //alternate way to make directories based on a file
+        //System.IO.FileInfo file = new System.IO.FileInfo(filePath);
+        //file.Directory.Create(); // If the directory already exists, this method does nothing.
+        //System.IO.File.WriteAllText(file.FullName, content);
+
+
         Debug.Log("Saving ALL Camera imgs... ");
+
+        
 
         //Save all Captured Textures to Disk
         for (int i = 0; i < photosCamA.Count; i++)
@@ -588,7 +609,7 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
             Utils.matToTexture2D(photosCamA[i], theTex);
 
             byte[] bytes = theTex.EncodeToPNG();
-            string filePath = "Graycode/CamA_" +
+            string filePath = "Graycode/SL/a/"+"CamA_" +
                i + ".png";
             File.WriteAllBytes(Application.absoluteURL + filePath, bytes);
             // Debug.Log("Saving Camera img PNG: " + filePath);
@@ -601,7 +622,7 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
             Utils.matToTexture2D(photosCamA_WB[i], theTex);
 
             byte[] bytes = theTex.EncodeToPNG();
-            string filePath = "Graycode/CamA_WB_" +
+            string filePath = "Graycode/SL/a/"+"CamA_WB_" +
                i + ".png";
             File.WriteAllBytes(Application.absoluteURL + filePath, bytes);
             // Debug.Log("Saving Camera img PNG: " + filePath);
@@ -617,7 +638,7 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
             Utils.matToTexture2D(photosCamB[i], theTex);
 
             byte[] bytes = theTex.EncodeToPNG();
-            string filePath = "Graycode/CamB_" +
+            string filePath = "Graycode/SL/b/"+"CamB_" +
                i + ".png";
             File.WriteAllBytes(Application.absoluteURL + filePath, bytes);
             // Debug.Log("Saving Camera img PNG: " + filePath);
@@ -630,12 +651,36 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
             Utils.matToTexture2D(photosCamB_WB[i], theTex);
 
             byte[] bytes = theTex.EncodeToPNG();
-            string filePath = "Graycode/CamB_WB_" +
+            string filePath = "Graycode/SL/b/" + "CamB_WB_" +
                i + ".png";
             File.WriteAllBytes(Application.absoluteURL + filePath, bytes);
             //Debug.Log("Saving Camera img PNG: " + filePath);
         }
+        
         Debug.Log("CamB Saved all graycode and WB captures ");
+
+        //Save Canonical Camera Images A and B
+        //Cam A canon
+        Texture2D theTexCA = new Texture2D(photoATargetTexture.width, photoATargetTexture.height);
+
+        //Save image to disk
+        Utils.matToTexture2D(photosCamA_WB[0], theTexCA);
+
+        byte[] bytesCA = theTexCA.EncodeToPNG();
+        string filePathCA = "Graycode/img/a/" + "CamA_canon"+".png";
+        File.WriteAllBytes(Application.absoluteURL + filePathCA, bytesCA);
+
+
+        //Cam B canon
+        Texture2D theTexCB = new Texture2D(photoBTargetTexture.width, photoBTargetTexture.height);
+
+        //Save image to disk
+        Utils.matToTexture2D(photosCamB_WB[0], theTexCB);
+
+        byte[] bytesCB = theTexCB.EncodeToPNG();
+        string filePathCB = "Graycode/img/b/" + "CamB_canon" + ".png";
+        File.WriteAllBytes(Application.absoluteURL + filePathCB, bytesCB);
+
 
     }
 
@@ -647,7 +692,7 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
         Utils.matToTexture2D(themat.clone(), theTex);
 
         byte[] bytes = theTex.EncodeToPNG();
-        string filePath = "Graycode/" + nameofimage + ".png";
+        string filePath = "Graycode/SL/" + nameofimage + ".png";
         File.WriteAllBytes(Application.absoluteURL + filePath, bytes);
     }
     void SaveAllGrayCodetoPNG()
@@ -1408,7 +1453,7 @@ void GrabWBPhotos(int index, string thecolor)
 
     void SaveCSV()
     {
-        string csvfilePath = getPath("ProjPointsCamA.CSV");
+        string csvfilePath = getPath("SL/ProjPointsCamA.CSV");
 
         //This is the writer, it writes to the filepath
         StreamWriter writer = new StreamWriter(csvfilePath);
@@ -1428,7 +1473,7 @@ void GrabWBPhotos(int index, string thecolor)
         writer.Close();
 
         //Repeat for Cam b
-        string csvfilePathB = getPath("ProjPointsCamB.CSV");
+        string csvfilePathB = getPath("SL/ProjPointsCamB.CSV");
 
         //This is the writer, it writes to the filepath
         StreamWriter writerB = new StreamWriter(csvfilePathB);
