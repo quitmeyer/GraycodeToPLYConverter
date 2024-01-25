@@ -18,6 +18,8 @@ using System.Collections;
 
 public class StructuredLightGrayCodeStereo : MonoBehaviour
 {
+
+
     Params paramz;
     GrayCodePattern grayCode;
 
@@ -67,6 +69,8 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
     [SerializeField, TooltipAttribute("Set the height of projector for scanning.")]
     public int projectorPixHeight = 1080;
 
+    [SerializeField, TooltipAttribute("sometimes scanning the projector at lower resolutions gives better overall results, this is how much the projector res is divided")]
+    public int projectorResDivider = 1;
 
 
     int numOfColImgs;
@@ -159,6 +163,16 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
 
     void Start()
     {
+        //Use multi displays
+        Debug.Log("displays connected: " + Display.displays.Length);
+        // Display.displays[0] is the primary, default display and is always ON, so start at index 1.
+        // Check if additional displays are available and activate each.
+
+        for (int i = 1; i < Display.displays.Length; i++)
+        {
+            Display.displays[i].Activate();
+        }
+
 
 
         camAdisplay = GameObject.Find("CamAImage");
@@ -195,9 +209,9 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
 
         //  paramz = new Params();
 
-        Debug.Log("Projector Size W = " + projectorPixWidth + " H  = " + projectorPixHeight);
+        Debug.Log("Projector Size Equivalent W = " + projectorPixWidth/projectorResDivider + " H  = " + projectorPixHeight / projectorResDivider);
 
-        grayCode = GrayCodePattern.create(projectorPixWidth, projectorPixHeight);
+        grayCode = GrayCodePattern.create(projectorPixWidth / projectorResDivider, projectorPixHeight / projectorResDivider);
 
         grayCode.generate(pattern);
 
@@ -207,7 +221,7 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
         patternWB.Add(white);
         patternWB.Add(black);
 
-        Debug.Log("patternWB size = " + patternWB.Count);
+        //Debug.Log("patternWB size = " + patternWB.Count);
 
         SaveAllGrayCodetoPNG();
         InitializeCameras();
@@ -644,7 +658,7 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
 
             for (int i = 0; i < pattern.Count; i++)
             {
-                Texture2D GraycodeDebugTex = new Texture2D(projectorPixWidth, projectorPixHeight);
+                Texture2D GraycodeDebugTex = new Texture2D(projectorPixWidth / projectorResDivider, projectorPixHeight / projectorResDivider);
                 Utils.matToTexture2D(pattern[i], GraycodeDebugTex); // Opencv Way
 
                 byte[] bytes = GraycodeDebugTex.EncodeToPNG();
@@ -654,7 +668,7 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
                 // Debug.Log("Saving Graycode PNG: " + filePath);
             }
         }
-        Debug.Log("Saved all graycode Files");
+        //Debug.Log("Saved all graycode Files");
     }
 
 
@@ -663,8 +677,10 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
     {
         //Setup Webcams
         devices = WebCamTexture.devices;
-        for (int i = 0; i < devices.Length; i++) // How many webcams we got?
+        for (int i = 0; i < devices.Length; i++){ // How many webcams we got?
             Debug.Log("Webcam " + i + " name = " + devices[i].name);
+			
+		}
 
         Debug.Log("Photocapture Camera resolution" + PhotoCapture.SupportedResolutions.OrderByDescending((res) => res.width * res.height).First()); //get highest resolution camera
         List<Resolution> reses = PhotoCapture.SupportedResolutions.ToList();
@@ -676,9 +692,13 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
         }
 
         Resolution cameraResolution = PhotoCapture.SupportedResolutions.OrderByDescending((res) => res.width * res.height).First();
+		//Resolution cameraResolution = (3840,2160);
+        //photoATargetTexture = new Texture2D(3840, 2160);
+        //photoBTargetTexture = new Texture2D(3840, 2160);
         photoATargetTexture = new Texture2D(cameraResolution.width, cameraResolution.height);
         photoBTargetTexture = new Texture2D(cameraResolution.width, cameraResolution.height);
-        displayTexture = new Texture2D(photoATargetTexture.width, photoATargetTexture.height);
+        
+		displayTexture = new Texture2D(photoATargetTexture.width, photoATargetTexture.height);
         //devices[0].
 
         if (setCameraSettings)
@@ -704,8 +724,11 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
 
         camAwebcam = new WebCamTexture(devices[camA_port].name, cameraResolution.width, cameraResolution.height, 60);
        // Debug.Log("Cam A FPS " + camAwebcam.requestedFPS);
+	      Debug.Log("Cam A width " + camAwebcam.requestedWidth);
+
         camBwebcam = new WebCamTexture(devices[camB_port].name, cameraResolution.width, cameraResolution.height, 60);
        // Debug.Log("Cam B FPS " + camBwebcam.requestedFPS);
+	      Debug.Log("Cam B width " + camBwebcam.requestedWidth);
 
         camAwebcam.Play();
         camBwebcam.Play();
@@ -1250,9 +1273,9 @@ void GrabWBPhotos(int index, string thecolor)
                     if (error)
                     {
                         //Debug.Log("~~~Projpix error... ");
-                        //Error (can't figure out what the pixel matches to, is Red
-                         double[] colorE = { 255, 0, 0, 40 };
-                         ProjPixMatA.put(j, i, colorE);
+                        //Error (can't figure out what the pixel matches to, is white
+                         double[] colorE = { 255, 255, 255 ,255};
+                         ProjPixMatA.put(j,i, colorE);
                         continue;
                     }
                     /**/
@@ -1262,18 +1285,18 @@ void GrabWBPhotos(int index, string thecolor)
                     Rows - pixels of camera
                     */
 
-                    double[] color = { 0, projPixelA.y / projectorPixHeight * 255, projPixelA.x / projectorPixWidth * 255, 255 };
-                    ProjPixMatA.put(j, i, color);
+                    double[] color = { 0, projPixelA.y*projectorResDivider / projectorPixHeight * 255, projPixelA.x * projectorResDivider / projectorPixWidth * 255, 255 };
+                    ProjPixMatA.put( j,  i, color);
                     XcA.Add(i);
                     YcA.Add(j);
-                    XpA.Add((int)projPixelA.x);
-                    YpA.Add((int)projPixelA.y);
+                    XpA.Add((int)projPixelA.x*projectorResDivider); //Undo the shrinking of the projector pixels
+                    YpA.Add( (int)projPixelA.y*projectorResDivider);
 
                 }
                 else // outside the shadow mask WE DONT CARE ABOUT THE PIXEL
                 {
-                    //Dont care is Light Gray
-                    double[] color = { 0, 0, 0, 100 };
+                    //Dont care is black
+                    double[] color = { 0, 0, 0, 255 };
                     ProjPixMatA.put(j, i, color);
                 }
 
@@ -1287,7 +1310,7 @@ void GrabWBPhotos(int index, string thecolor)
         {
             for (int j = 0; j < cam_rowsB; j++)
             {
-                double[] colorNeutralOutsideMask = { 0, 0, 0, 100 };
+                double[] colorNeutralOutsideMask = { 0, 0, 0, 255 };
                 ProjPixMatB.put(j, i, colorNeutralOutsideMask);
 
                 //if the pixel is not shadowed, reconstruct
@@ -1303,7 +1326,7 @@ void GrabWBPhotos(int index, string thecolor)
                     {
                         //Debug.Log("~~~Projpix error... ");
                         //Error (can't figure out what the pixel matches to, is Red, Error Pixel)
-                          double[] colorE = { 255, 0, 0, 40 };
+                          double[] colorE = { 255, 255, 255, 255 };
                            ProjPixMatB.put(j, i, colorE);
                         continue;
                     }
@@ -1314,18 +1337,18 @@ void GrabWBPhotos(int index, string thecolor)
                     Rows - pixels of camera
                     */
 
-                    double[] color = { 0, projPixelB.y / projectorPixHeight * 255, projPixelB.x / projectorPixWidth * 255, 255 };
+                    double[] color = { 0, projPixelB.y * projectorResDivider / projectorPixHeight * 255, projPixelB.x * projectorResDivider / projectorPixWidth * 255, 255 };
                     ProjPixMatB.put(j, i, color);
                     XcB.Add(i);
                     YcB.Add(j);
-                    XpB.Add((int)projPixelB.x);
-                    YpB.Add((int)projPixelB.y);
+                    XpB.Add( (int)projPixelB.x * projectorResDivider);
+                    YpB.Add( (int)projPixelB.y * projectorResDivider);
 
                 }
                 else // outside the shadow mask WE DONT CARE ABOUT THE PIXEL
                 {
                     //Dont care is dark gray
-                    double[] color = { 0, 0, 0, 100 };
+                    double[] color = { 0, 0, 0, 255 };
                     ProjPixMatB.put(j, i, color);
                 }
 

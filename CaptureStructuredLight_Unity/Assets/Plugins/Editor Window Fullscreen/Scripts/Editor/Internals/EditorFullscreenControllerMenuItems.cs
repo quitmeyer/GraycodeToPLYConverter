@@ -1,5 +1,5 @@
 //AUTO-GENERATED SCRIPT. ANY MODIFICATIONS WILL BE OVERWRITTEN.
-//GUID: {b7a299f1-e8fb-41d6-b6d9-c99b928ed020}
+//GUID: {b6853174-f1df-4b13-9cd6-7e14c6d64607}
 using UnityEngine;
 using UnityEditor;
 namespace EditorWindowFullscreen {

@@ -1,1 +1,1 @@
-py GlowcakeDatabaseGoocher.py --db vs_dec5_rad.db  --projWidth 3840 --projHeight 2160 --projImage white3840.png --subSample 0 --camModel Radial
+py GlowcakeDatabaseGoocher.py --db jan23.db  --projWidth 3840 --projHeight 2160 --projImage white3840.png --subSample 0 --camModel Radial
