@@ -291,7 +291,7 @@ def example_usage():
     ### Get the Canonical Camera's ID
     print("\n List Canonical Camera A  ")  
 
-    canonCamA = db.execute("SELECT * from Images where name='a/camA_WB_1.png'")
+    canonCamA = db.execute("SELECT * from Images where name='a/CamA_WB_1.png'")
  
 
     for i in canonCamA:
@@ -304,7 +304,7 @@ def example_usage():
 
     print("\n List Canonical Camera B  ")  
 
-    canonCamB = db.execute("SELECT * from Images where name='b/camB_WB_1.png'")
+    canonCamB = db.execute("SELECT * from Images where name='b/CamB_WB_1.png'")
     for i in canonCamB:
         print("\n canonical Camera B  ")  
         print(i)  
