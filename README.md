@@ -48,6 +48,7 @@ Run example_aruco_
 Calibrate_camera_dualcamera_photos_cpp
 
 Collect a bunch of photos
+It takes a photo about every two seconds and should make your computer ding
 
 Files get saved to
 
@@ -57,18 +58,26 @@ C:\Users\andre\Desktop\Glowcake Hoss\Scans
 
 # Colmap Processing
 
-
-
-* You need to go into the PG photogrammetry folders called A and B and find the photos taken in the position of the canonical cameras for the Structured light ((usually this is your photo called camA_im0.png)) and rename those images to be copies of the canonical camera images
+You need to go into the PG photogrammetry folders called A and B and find the photos taken in the position of the canonical cameras for the Structured light ((usually this is your photo called camA_im0.png)) and rename two of those images to be copies of the canonical camera images
 * 
-* `a/camA_WB_1.png`
+* a/CamA_WB_1.png
 * And
-* b/camB_WB_1.png
-* Run all the photogrammetry files
+* b/CamB_WB_1.png
+
+in colmap create a new database with an images folder that points to where the a and b subfolders are
+* click "Feature Extraction"
+* choose "shared intrinsics per subfolder
+* Choose the camera model you are using (currently we are using Radial)
+* run feature extraction
+* next run Match features
+
+
 
 5) Run the goocher to tie things together
+* set up your command line parameters for the goocher by editing the runGraycodeGoocher.bat
+* 
 
-6) Run Colmap AGAIN
+7) Run Colmap AGAIN
 
  Make sure that “ignore two-view geometries” is UNCHECKED in the reconstruction options
 
