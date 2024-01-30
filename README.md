@@ -7,6 +7,7 @@ When using two brio cameras, they historically have problems outputting the full
 
 another person told me their workaround was to download some sort of program that people use for twitch and only fans that optimizes the cameras for streaming
 
+## Start Unity Scan
 anyway first step is to connect the cameras and then (using something like amcap or the logitune app
 * lock the exposure (i use -8) (too short and it breaks a projector into rainbows, too long and it overexposes)
 * lock the focus (i just locked em down to 0 and they work fine, kind of like an infinity focus)
@@ -22,6 +23,7 @@ This lets you look at all the options for the structured light program
 * set a resolution divider for the projector (sometimes your projector will project too narrow of lines for your camera to see)
 * select the correct ports for the cameras. Cam A is usually the right camera (when looking from behind the camera pair). Cam A will display on the top in the canvas view
 
+## Run the Scan
 Next you can hit the big play button and start the program running.
 
 Switch to your game window and bring it to the projector's display
@@ -29,7 +31,7 @@ Switch to your game window and bring it to the projector's display
 Press F11 to activate the FULLSCREEN plugin and make the game window entirely fullscreen without any bars
 
 When it first starts up, your screen will show you previews of both cameras.  You can use this to double check cam A is on top
-### Scanning
+## Scanning
 * press A to activate automatic mode
 * then press spacebar to start the automatic scan
 * After the scan has stopped, first press P to process all the images (this will take a minute or so)
@@ -41,8 +43,24 @@ C:\Users\andre\Desktop\Glowcake Hoss\Structured Light\Graycode
 
 
 
-# Photogrammetry
 
+
+
+# Colmap Processing
+
+
+## Fresh Full Scan (Calibrate Camera and Projector Intrinsics)
+If the cameras and projector are substantially different from other scans, we need to do a really good full scan and 
+
+
+
+### Photogrammetry
+
+##### Stereo Capture with Brio cameras
+
+This runs a program that captures stereo, high res photos of a scene. Once started it should make a beep/ding sound every time the computer captures an image. The output shows how many photos have been taken. This is useful for a photogrammetry scan of a scene.
+
+#### Run the Capture
 Run example_aruco_
 
 Calibrate_camera_dualcamera_photos_cpp
@@ -50,14 +68,14 @@ Calibrate_camera_dualcamera_photos_cpp
 Collect a bunch of photos
 It takes a photo about every two seconds and should make your computer ding
 
-Files get saved to
+#### Save the photos
+It takes a while to save the photos because they are large. So we save them all after the program have captured photos to memory.
 
+Press "s" or "esc" to start saving
+Files get saved to
 C:\Users\andre\Desktop\Glowcake Hoss\Scans
 
-
-
-# Colmap Processing
-
+### Colmap Full Scan Process Photogrammetry
 You need to go into the PG photogrammetry folders called A and B and find the photos taken in the position of the canonical cameras for the Structured light ((usually this is your photo called camA_im0.png)) and rename two of those images to be copies of the canonical camera images
 * 
 * a/CamA_WB_1.png
@@ -93,7 +111,9 @@ DOUBLE CHECK FEATURES on CAMA_WB1
 
 7)
 
-**Import into Blender**
+# Manipulating the Mesh
+
+## Import into Blender
 
 There is a script you can find online that will import colmap scenes into blender. When importing, in the import options, make sure to click “import point cloud as mesh” so that you get something that can actually be rendered in blender (you can’t render pointclouds in blender without a headache)
 
