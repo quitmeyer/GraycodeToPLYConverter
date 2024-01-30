@@ -249,14 +249,15 @@ def example_usage():
     print("doing stuff")
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--db", default="database.db")
-    parser.add_argument("--camAPoints", default="SL/ProjPointsCamA.CSV")
-    parser.add_argument("--camBPoints", default="SL/ProjPointsCamB.CSV")
-    parser.add_argument("--projWidth", default="1920")
-    parser.add_argument("--projHeight", default="1080")
-    parser.add_argument("--projImage", default="white1920.png")
+    parser.add_argument("--project", default="glowcake_01_2024")
+    parser.add_argument("--db", default="pg/database.db")
+    parser.add_argument("--camAPoints", default="sl/ProjPointsCamA.CSV")
+    parser.add_argument("--camBPoints", default="sl/ProjPointsCamB.CSV")
+    parser.add_argument("--projWidth", default="3840")
+    parser.add_argument("--projHeight", default="2160")
+    parser.add_argument("--projImage", default="white3840.png")
     parser.add_argument("--subSample", default="1")
-    parser.add_argument("--camModel", default="SimplePinhole")
+    parser.add_argument("--camModel", default="Radial")
 
 
 
@@ -265,22 +266,23 @@ def example_usage():
     #rowsA = ONLYTAKE EVERY Xth entry
     subSample=int(args.subSample)
     newDBname = args.db[:-3]+"_"+args.camModel+"_"+str(subSample)+"_new.db"
+    projectName= args.project
     shutil.copy(args.db, newDBname)
 
-    if os.path.exists(newDBname):
+    if os.path.exists(projectName+"/"+newDBname):
         print("Good! database path already exists -- .")
-        print("let's fuck it up")
+        print("let's gooch it up")
     #    return
 
-    if os.path.exists(args.camAPoints):
+    if os.path.exists(projectName+"/"+args.camAPoints):
         print("Good! cam A points exist! let's read em! -- .")
-        print(args.camAPoints)
+        print(projectName+"/"+args.camAPoints)
     #    return
 
 
     # Open the database.
     
-    db = COLMAPDatabase.connect(newDBname)
+    db = COLMAPDatabase.connect(projectName+"/"+newDBname)
     print("database opened")
 
     # For convenience, try creating all the tables upfront.
@@ -373,7 +375,7 @@ def example_usage():
                 p_camera_id1 = db.add_camera(p_model1, p_width1, p_height1, p_params1)
                 print("added the "+args.camModel+" projector camera with id = "+str(p_camera_id1))
 
-        #values taken from guess calculations
+    #values taken from guess calculations
     #p_model1, p_width1, p_height1, p_params1 =  4, 1366, 768, np.array((1.732,1.732, 1366/2, 768/2,0,0,0,0)) #you need this many arguments for an openCV param or it will crash everything
     #p_model1, p_width1, p_height1, p_params1 =  4, 1920, 1080, np.array((1.732,1.732, 1920/2, 1080/2,0,0,0,0)) #you need this many arguments for an openCV param or it will crash everything
     #p_model1, p_width1, p_height1, p_params1 =  4, 3840, 2160, np.array((1.732,1.732, 3840/2, 2160/2,0,0,0,0)) #you need this many arguments for an openCV param or it will crash everything
@@ -393,7 +395,7 @@ def example_usage():
     fieldsA = []
     rowsA = []
     # reading csv file for Camera A
-    with open(args.camAPoints, 'r') as csvfile:
+    with open(projectName+"/sl/decoded/"+args.camAPoints, 'r') as csvfile:
     # creating a csv reader object
         csvreader = csv.reader(csvfile)
       
@@ -426,7 +428,7 @@ def example_usage():
     fieldsB = []
     rowsB = []
     # reading csv file for Camera B
-    with open(args.camBPoints, 'r') as csvfileB:
+    with open(projectName+"/sl/decoded/"+args.camBPoints, 'r') as csvfileB:
     # creating a csv reader object
         csvreaderB = csv.reader(csvfileB)
       
