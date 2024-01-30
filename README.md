@@ -42,15 +42,37 @@ Currently files get saved to
 C:\Users\andre\Desktop\Glowcake Hoss\Structured Light\Graycode
 
 
+# Directory Structure
 
+To help with colmap processing, your data should eventually be in a directory/file naming structure like this
+```
+├── project_scan_date
+│   ├── pg
+│   │   ├── model
+│   │   ├── img
+│   │   │   ├── a
+│   │   │   ├── b
+│   │   │   ├── projector
+│   │   │   │   ├──white3840.png (a blank png with the width and height of the projector you used)
+│   │   ├── a
+│   │   ├── b
+│   │   ├── projector
 
-
+├── sl
+│   ├── a
+│   ├── b
+│   ├── decoded
+│   │   ├── ProjPixMatA.png
+│   │   ├── ProjPixMatB.png
+│   │   ├── ProjPointsCamA.CSV
+│   │   ├── ProjPointsCamB.CSV
+```
 
 # Colmap Processing
 
 
 ## Fresh Full Scan (Calibrate Camera and Projector Intrinsics)
-If the cameras and projector are substantially different from other scans, we need to do a really good full scan and 
+If the cameras and projector are substantially different from other scans, we need to do a really good full scan and get the camera and projector intrinsics from this. Later if we already have the intrinsics for the cameras and projectors, we can skip to the "Minimal Scan" option, where we do not need to do a long format photogrammetry scan.
 
 
 
@@ -74,6 +96,9 @@ It takes a while to save the photos because they are large. So we save them all 
 Press "s" or "esc" to start saving
 Files get saved to
 C:\Users\andre\Desktop\Glowcake Hoss\Scans
+
+
+
 
 ### Colmap Full Scan Process Photogrammetry
 You need to go into the PG photogrammetry folders called A and B and find the photos taken in the position of the canonical cameras for the Structured light ((usually this is your photo called camA_im0.png)) and rename two of those images to be copies of the canonical camera images
