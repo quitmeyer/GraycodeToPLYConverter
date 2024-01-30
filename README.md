@@ -46,26 +46,25 @@ C:\Users\andre\Desktop\Glowcake Hoss\Structured Light\Graycode
 
 To help with colmap processing, your data should eventually be in a directory/file naming structure like this
 ```
+└── GlowcakeDatabaseGoocher.py
+└── runGrayCodeGoocher.bat
 ├── project_scan_date
 │   ├── pg
-│   │   ├── model
+│   └── project_scan_date.db
+│   │   ├── models
 │   │   ├── img
 │   │   │   ├── a
 │   │   │   ├── b
 │   │   │   ├── projector
-│   │   │   │   ├──white3840.png (a blank png with the width and height of the projector you used)
+│   │   │   │   └── white3840.png (a blank png with the width and height of the projector you used)
+│   ├── sl
 │   │   ├── a
 │   │   ├── b
-│   │   ├── projector
-
-├── sl
-│   ├── a
-│   ├── b
-│   ├── decoded
-│   │   ├── ProjPixMatA.png
-│   │   ├── ProjPixMatB.png
-│   │   ├── ProjPointsCamA.CSV
-│   │   ├── ProjPointsCamB.CSV
+│   │   ├── decoded
+│   │   │   └── ProjPixMatA.png
+│   │   │   └── ProjPixMatB.png
+│   │   │   └── ProjPointsCamA.CSV
+│   │   │   └── ProjPointsCamB.CSV
 ```
 
 # Colmap Processing
