@@ -54,12 +54,16 @@ To help with colmap processing, your data should eventually be in a directory/fi
 │   │   ├── models
 │   │   ├── img
 │   │   │   ├── a
+│   │   │   │   └── "CamA_canon"+".png"
 │   │   │   ├── b
+│   │   │   │   └── "CamB_canon"+".png"
 │   │   │   ├── projector
 │   │   │   │   └── white3840.png (a blank png with the width and height of the projector you used)
 │   ├── sl
 │   │   ├── a
+│   │   │   └── "CamA_" + graycodeseriesnum + ".png"
 │   │   ├── b
+│   │   │   └── "CamB_" + graycodeseriesnum + ".png"
 │   │   ├── decoded
 │   │   │   └── ProjPixMatA.png
 │   │   │   └── ProjPixMatB.png
