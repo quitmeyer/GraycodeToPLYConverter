@@ -580,11 +580,15 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
         // ** note, maybe we can add the date that a scan was taken to its file path
 
         
-        DirectoryInfo di = Directory.CreateDirectory("Graycode/img/a/");
-        DirectoryInfo dib = Directory.CreateDirectory("Graycode/img/b/");
-        DirectoryInfo dip = Directory.CreateDirectory("Graycode/img/projector/");
+        DirectoryInfo di = Directory.CreateDirectory("Graycode/pg/img/a/");
+        DirectoryInfo dib = Directory.CreateDirectory("Graycode/pg/img/b/");
+        DirectoryInfo dip = Directory.CreateDirectory("Graycode/pg/img/projector/");
+        DirectoryInfo dipm = Directory.CreateDirectory("Graycode/pg/models/");
+
         DirectoryInfo dipSLa = Directory.CreateDirectory("Graycode/SL/a/");
         DirectoryInfo dipSLb = Directory.CreateDirectory("Graycode/SL/b/");
+        DirectoryInfo dipSLd = Directory.CreateDirectory("Graycode/SL/decoded/");
+
 
 
         //Debug.Log("The directory was created successfully at {0}.",Directory.GetCreationTime("Graycode/imgs/a/"));
@@ -667,7 +671,7 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
         Utils.matToTexture2D(photosCamA_WB[0], theTexCA);
 
         byte[] bytesCA = theTexCA.EncodeToPNG();
-        string filePathCA = "Graycode/img/a/" + "CamA_canon"+".png";
+        string filePathCA = "Graycode/pg/img/a/" + "CamA_canon"+".png";
         File.WriteAllBytes(Application.absoluteURL + filePathCA, bytesCA);
 
 
@@ -678,7 +682,7 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
         Utils.matToTexture2D(photosCamB_WB[0], theTexCB);
 
         byte[] bytesCB = theTexCB.EncodeToPNG();
-        string filePathCB = "Graycode/img/b/" + "CamB_canon" + ".png";
+        string filePathCB = "Graycode/pg/img/b/" + "CamB_canon" + ".png";
         File.WriteAllBytes(Application.absoluteURL + filePathCB, bytesCB);
 
 
