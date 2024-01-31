@@ -154,9 +154,20 @@ save your model in your pg->models folder
 
 There is a script you can find online that will import colmap scenes into blender. When importing, in the import options, make sure to click “import point cloud as mesh” so that you get something that can actually be rendered in blender (you can’t render pointclouds in blender without a headache)
 
-You also need to import the revopoint scan
+File - > Import - > Colamp
+make sure to click "import points as mesh object"
 
-8) do distortion in blender
+![image](https://github.com/quitmeyer/GraycodeToPLYConverter/assets/742627/93ae93d6-8e9f-4ad8-b882-0fe5b1155d1a)
+
+It should import and you should see your scan
+
+next save the whole blender project
+![image](https://github.com/quitmeyer/GraycodeToPLYConverter/assets/742627/6f4da6f5-b563-4c2f-b1ab-1f49ee6a7842)
+
+## Import into Unity
+
+
+### (optional for now) do distortion in blender
 
 https://blender.stackexchange.com/questions/181062/how-to-apply-custom-lens-distortion-parameters-to-a-rendered-image
 
