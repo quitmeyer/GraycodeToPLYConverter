@@ -99,8 +99,6 @@ close the dialog
 # Graycode Matches Injector (Goocher)
 
 Run the goocher to tie things together
-* set up your command line parameters for the goocher by editing the runGraycodeGoocher.bat
-* 
 
 ## Setup Goocher Command Line Arguments
 You might need to customize the goocher to the projector you are using
@@ -118,22 +116,37 @@ you can edit the rungraycodegoocher.bat file to change these
     parser.add_argument("--camModel", default="Radial")
 
 ```
+it should tell you you are finished graycode gooching, and you should have a new database file in your project!
 
-7) Run Colmap AGAIN
+## Run Colmap AGAIN
 
- Make sure that “ignore two-view geometries” is UNCHECKED in the reconstruction options
+back in colmap click edit project
 
-Make sure to click “refine principle point” in reconstruction options
+choose the NEW database file you made with the goocher
 
-(though maybe just refine focal distance? This actually seems a lot better!)
+![image](https://github.com/quitmeyer/GraycodeToPLYConverter/assets/742627/89ee8569-74ae-45d4-a257-e9f48d0d6147)
+click save
 
-Export the reconstructed model (it took 26 minutes to reconstruct my last scan)
+click the database button
+manually edit the cameras intrinsics to match what you collected earlier
 
-WATCH OUT FOR CAMERA SWITCHING!
+![image](https://github.com/quitmeyer/GraycodeToPLYConverter/assets/742627/305fe36c-8922-4790-bf24-0df2870ce36b)
 
-DOUBLE CHECK FEATURES on CAMA_WB1 
+go to Reconstruction->reconstruction options
+click "Triangulation..."
+uncheck "ignore two-view"
+go to "Bundle adjust..."
+uncheck all three "refine..."
 
-7)
+
+
+Hit the big play button, and then in a minute or two you should have your model!
+
+![image](https://github.com/quitmeyer/GraycodeToPLYConverter/assets/742627/0fbd0614-25f8-436f-b7f4-d7aa026eab01)
+
+click File->export model as Text
+save your model in your pg->models folder
+
 
 # Manipulating the Mesh
 
