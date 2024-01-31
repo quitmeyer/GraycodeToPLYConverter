@@ -50,7 +50,6 @@ To help with colmap processing, your data should eventually be in a directory/fi
 └── runGrayCodeGoocher.bat
 ├── project_scan_date
 │   ├── pg
-│   └── project_scan_date.db
 │   │   ├── models
 │   │   ├── img
 │   │   │   ├── a
@@ -59,6 +58,7 @@ To help with colmap processing, your data should eventually be in a directory/fi
 │   │   │   │   └── "CamB_canon"+".png"
 │   │   │   ├── projector
 │   │   │   │   └── white3840.png (a blank png with the width and height of the projector you used)
+│   └── database.db
 │   ├── sl
 │   │   ├── a
 │   │   │   └── "CamA_" + graycodeseriesnum + ".png"
@@ -119,9 +119,27 @@ in colmap create a new database with an images folder that points to where the a
 
 
 
-5) Run the goocher to tie things together
+# Graycode Matches Injector (Goocher)
+
+Run the goocher to tie things together
 * set up your command line parameters for the goocher by editing the runGraycodeGoocher.bat
 * 
+
+## Setup Goocher Command Line Arguments
+You might need to customize the goocher to the projector you are using
+Here is a list of the arguments that the Graycode goocher contains and their defaults
+```
+    parser.add_argument("--project", default="glowcake_01_2024")
+    parser.add_argument("--db", default="pg/database.db")
+    parser.add_argument("--camAPoints", default="sl/ProjPointsCamA.CSV")
+    parser.add_argument("--camBPoints", default="sl/ProjPointsCamB.CSV")
+    parser.add_argument("--projWidth", default="3840")
+    parser.add_argument("--projHeight", default="2160")
+    parser.add_argument("--projImage", default="white3840.png")
+    parser.add_argument("--subSample", default="1")
+    parser.add_argument("--camModel", default="Radial")
+
+```
 
 7) Run Colmap AGAIN
 
