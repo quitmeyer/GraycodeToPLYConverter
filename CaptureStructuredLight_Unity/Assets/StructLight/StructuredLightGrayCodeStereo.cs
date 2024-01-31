@@ -161,8 +161,40 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
     bool timerReached = false;
     double timer = 0;
 
+    //Date and project name stuff
+    string project_name = "Scan_";
+
     void Start()
     {
+
+
+        //Create Folders
+
+        Debug.Log("Creating Directories... ");
+        // ** note, maybe we can add the date that a scan was taken to its file path
+
+
+        System.DateTime theTime = System.DateTime.Now;
+        string date = theTime.ToString("yyyy-MM-dd\\Z");
+        string time = theTime.ToString("HH:mm:ss\\Z");
+        string datetime = theTime.ToString("yyyy-MM-dd\\THH_mm\\Z");
+
+        project_name = "Scan_" + datetime;
+        Debug.Log("Project name  "+project_name);
+
+        DirectoryInfo project = Directory.CreateDirectory("Graycode/" + project_name + "/");
+
+        DirectoryInfo di = Directory.CreateDirectory("Graycode/" + project_name + "/pg/img/a/");
+        DirectoryInfo dib = Directory.CreateDirectory("Graycode/" + project_name + "/pg/img/b/");
+        DirectoryInfo dip = Directory.CreateDirectory("Graycode/" + project_name + "/pg/img/projector/");
+        DirectoryInfo dipm = Directory.CreateDirectory("Graycode/" + project_name + "/pg/models/");
+
+        DirectoryInfo dipSLa = Directory.CreateDirectory("Graycode/" + project_name + "/sl/a/");
+        DirectoryInfo dipSLb = Directory.CreateDirectory("Graycode/" + project_name + "/sl/b/");
+        DirectoryInfo dipSLd = Directory.CreateDirectory("Graycode/" + project_name + "/sl/decoded/");
+
+
+
         //Use multi displays
         Debug.Log("displays connected: " + Display.displays.Length);
         // Display.displays[0] is the primary, default display and is always ON, so start at index 1.
@@ -576,20 +608,6 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
     {
         introPreview = false;
 
-        Debug.Log("Creating Directories... ");
-        // ** note, maybe we can add the date that a scan was taken to its file path
-
-        
-        DirectoryInfo di = Directory.CreateDirectory("Graycode/pg/img/a/");
-        DirectoryInfo dib = Directory.CreateDirectory("Graycode/pg/img/b/");
-        DirectoryInfo dip = Directory.CreateDirectory("Graycode/pg/img/projector/");
-        DirectoryInfo dipm = Directory.CreateDirectory("Graycode/pg/models/");
-
-        DirectoryInfo dipSLa = Directory.CreateDirectory("Graycode/SL/a/");
-        DirectoryInfo dipSLb = Directory.CreateDirectory("Graycode/SL/b/");
-        DirectoryInfo dipSLd = Directory.CreateDirectory("Graycode/SL/decoded/");
-
-
 
         //Debug.Log("The directory was created successfully at {0}.",Directory.GetCreationTime("Graycode/imgs/a/"));
 
@@ -610,10 +628,10 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
             // Debug.Log("photosCamA[i] width " + photosCamA[i].width());
 
             //Save image to disk
-            Utils.matToTexture2D(photosCamA[i], theTex);
+            Utils.matToTexture2D(photosCamA[i], theTex, true, 0, true); // For some reason you have to set these flips active, or the next time you use that mat, they will be flipped!
 
             byte[] bytes = theTex.EncodeToPNG();
-            string filePath = "Graycode/SL/a/"+"CamA_" +
+            string filePath = "Graycode/" + project_name + "/sl/a/" + "CamA_" +
                i + ".png";
             File.WriteAllBytes(Application.absoluteURL + filePath, bytes);
             // Debug.Log("Saving Camera img PNG: " + filePath);
@@ -623,10 +641,10 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
             Texture2D theTex = new Texture2D(photoATargetTexture.width, photoATargetTexture.height);
 
             //Save image to disk
-            Utils.matToTexture2D(photosCamA_WB[i], theTex);
+            Utils.matToTexture2D(photosCamA_WB[i], theTex, true, 0, true);
 
             byte[] bytes = theTex.EncodeToPNG();
-            string filePath = "Graycode/SL/a/"+"CamA_WB_" +
+            string filePath = "Graycode/" + project_name + "/sl/a/" + "CamA_WB_" +
                i + ".png";
             File.WriteAllBytes(Application.absoluteURL + filePath, bytes);
             // Debug.Log("Saving Camera img PNG: " + filePath);
@@ -639,10 +657,10 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
             Texture2D theTex = new Texture2D(photoBTargetTexture.width, photoBTargetTexture.height);
 
             //Save image to disk
-            Utils.matToTexture2D(photosCamB[i], theTex);
+            Utils.matToTexture2D(photosCamB[i], theTex, true, 0, true);
 
             byte[] bytes = theTex.EncodeToPNG();
-            string filePath = "Graycode/SL/b/"+"CamB_" +
+            string filePath = "Graycode/" + project_name + "/sl/b/" + "CamB_" +
                i + ".png";
             File.WriteAllBytes(Application.absoluteURL + filePath, bytes);
             // Debug.Log("Saving Camera img PNG: " + filePath);
@@ -652,10 +670,10 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
             Texture2D theTex = new Texture2D(photoBTargetTexture.width, photoBTargetTexture.height);
 
             //Save image to disk
-            Utils.matToTexture2D(photosCamB_WB[i], theTex);
+            Utils.matToTexture2D(photosCamB_WB[i], theTex, true, 0, true);
 
             byte[] bytes = theTex.EncodeToPNG();
-            string filePath = "Graycode/SL/b/" + "CamB_WB_" +
+            string filePath = "Graycode/" + project_name + "/sl/b/" + "CamB_WB_" +
                i + ".png";
             File.WriteAllBytes(Application.absoluteURL + filePath, bytes);
             //Debug.Log("Saving Camera img PNG: " + filePath);
@@ -668,10 +686,11 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
         Texture2D theTexCA = new Texture2D(photoATargetTexture.width, photoATargetTexture.height);
 
         //Save image to disk
-        Utils.matToTexture2D(photosCamA_WB[0], theTexCA);
+        Utils.matToTexture2D(photosCamA_WB[0], theTexCA,true,0,true);         //Note, for some reason there is a problem where these textures will get flipped upside down if they get saved again like this. I blame this utility
+
 
         byte[] bytesCA = theTexCA.EncodeToPNG();
-        string filePathCA = "Graycode/pg/img/a/" + "CamA_canon"+".png";
+        string filePathCA = "Graycode/" + project_name + "/pg/img/a/" + "CamA_canon"+".png";
         File.WriteAllBytes(Application.absoluteURL + filePathCA, bytesCA);
 
 
@@ -679,10 +698,10 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
         Texture2D theTexCB = new Texture2D(photoBTargetTexture.width, photoBTargetTexture.height);
 
         //Save image to disk
-        Utils.matToTexture2D(photosCamB_WB[0], theTexCB);
+        Utils.matToTexture2D(photosCamB_WB[0], theTexCB, true, 0, true);
 
         byte[] bytesCB = theTexCB.EncodeToPNG();
-        string filePathCB = "Graycode/pg/img/b/" + "CamB_canon" + ".png";
+        string filePathCB = "Graycode/" + project_name + "/pg/img/b/" + "CamB_canon" + ".png";
         File.WriteAllBytes(Application.absoluteURL + filePathCB, bytesCB);
 
 
@@ -693,10 +712,21 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
         Texture2D theTex = new Texture2D(themat.width(), themat.height());
 
         //Save image to disk
-        Utils.matToTexture2D(themat.clone(), theTex);
+        Utils.matToTexture2D(themat.clone(), theTex, true, 0, true);
 
         byte[] bytes = theTex.EncodeToPNG();
-        string filePath = "Graycode/SL/" + nameofimage + ".png";
+        string filePath = "Graycode/" + project_name + "/sl/" + nameofimage + ".png";
+        File.WriteAllBytes(Application.absoluteURL + filePath, bytes);
+    }
+    void SaveProjPixMattoPNG(Mat themat, string nameofimage)
+    {
+        Texture2D theTex = new Texture2D(themat.width(), themat.height());
+
+        //Save image to disk
+        Utils.matToTexture2D(themat.clone(), theTex, true, 0, true);
+
+        byte[] bytes = theTex.EncodeToPNG();
+        string filePath = "Graycode/" + project_name + "/sl/decoded/" + nameofimage + ".png";
         File.WriteAllBytes(Application.absoluteURL + filePath, bytes);
     }
     void SaveAllGrayCodetoPNG()
@@ -708,10 +738,10 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
             for (int i = 0; i < pattern.Count; i++)
             {
                 Texture2D GraycodeDebugTex = new Texture2D(projectorPixWidth / projectorResDivider, projectorPixHeight / projectorResDivider);
-                Utils.matToTexture2D(pattern[i], GraycodeDebugTex); // Opencv Way
+                Utils.matToTexture2D(pattern[i], GraycodeDebugTex, true, 0, true); // Opencv Way
 
                 byte[] bytes = GraycodeDebugTex.EncodeToPNG();
-                string filePath = "Graycode/Graycode_" +
+                string filePath = "Graycode/" + project_name + "/Graycode_" +
                     i + ".png";
                 File.WriteAllBytes(Application.absoluteURL + filePath, bytes);
                 // Debug.Log("Saving Graycode PNG: " + filePath);
@@ -1037,7 +1067,7 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
         //FOr some reason you have to set up a new fresh mat to copy to when using the Utils.matToTexture2D or it flips it upside down every other time
         Mat tempMat = theMat.clone();
         Texture2D texturego = new Texture2D(theMat.cols(), theMat.rows());
-        Utils.matToTexture2D(tempMat, texturego);
+        Utils.matToTexture2D(tempMat, texturego, true, 0, true);
 
         texturego.Apply(); //OMGFG IT JUST NEEDED APPLY!!! WTF
                            // displayTexture.Resize(theMat.cols(), theMat.rows());
@@ -1054,7 +1084,7 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
         //FOr some reason you have to set up a new fresh mat to copy to when using the Utils.matToTexture2D or it flips it upside down every other time
         Mat tempMat = theMat.clone();
         Texture2D texturego = new Texture2D(theMat.cols(), theMat.rows());
-        Utils.matToTexture2D(tempMat, texturego);
+        Utils.matToTexture2D(tempMat, texturego, true, 0, true);
 
         texturego.Apply(); //OMGFG IT JUST NEEDED APPLY!!! WTF
                            //   displayTexture.Resize(theMat.cols(), theMat.rows());
@@ -1072,7 +1102,7 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
         //FOr some reason you have to set up a new fresh mat to copy to when using the Utils.matToTexture2D or it flips it upside down every other time
         Mat tempMat = theMat.clone();
         Texture2D texturego = new Texture2D(theMat.cols(), theMat.rows());
-        Utils.matToTexture2D(tempMat, texturego);
+        Utils.matToTexture2D(tempMat, texturego, true, 0, true);
 
         texturego.Apply(); //OMGFG IT JUST NEEDED APPLY!!! WTF
         displayTexture.Resize(theMat.cols(), theMat.rows());
@@ -1093,9 +1123,9 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
 
         // string filename = string.Format(@"CapturedImage{0}.png", capturedImageCount);
         //string filePath = System.IO.Path.Combine(Application.persistentDataPath, filename);
-        string filePathCamA = "Graycode/CamA_" +
+        string filePathCamA = "Graycode/" + project_name + "/sl/a/CamA_" +
             index + ".png";
-        string filePathCamB = "Graycode/CamB_" +
+        string filePathCamB = "Graycode/" + project_name + "/sl/b/CamB_" +
             index + ".png";
         /*Grab Photo after each Projection*/
         //Save the Photos to the Disk
@@ -1118,7 +1148,7 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
        // yield return null;
     }
 
-void GrabWBPhotos(int index, string thecolor)
+void GrabWBPhotos(int index, string thecolor) //NOTE - we will need a way to enter the project name to know which to scan
     {
         // yield return new WaitForSeconds(1.25f);
        // yield return new WaitForEndOfFrame();
@@ -1126,9 +1156,9 @@ void GrabWBPhotos(int index, string thecolor)
         CamAFinishedProcessing = false;
         CamBFinishedProcessing = false;
 
-        string filePathA = "Graycode/CamA_" +
+        string filePathA = "Graycode/" + project_name + "/sl/a/CamA_" +
            thecolor + ".png";
-        string filePathB = "Graycode/CamB_" +
+        string filePathB = "Graycode/" + project_name + "/sl/b/CamB_" +
          thecolor + ".png";
         /*Grab Photo after each Projection*/
         //Save the Photos to the Disk
@@ -1408,8 +1438,8 @@ void GrabWBPhotos(int index, string thecolor)
         Debug.Log("~~~Showing Projector pixels mat... ");
 
 
-        SaveMattoPNG(ProjPixMatA, "ProjPixMatA");
-        SaveMattoPNG(ProjPixMatB, "ProjPixMatB");
+        SaveProjPixMattoPNG(ProjPixMatA, "ProjPixMatA");
+        SaveProjPixMattoPNG(ProjPixMatB, "ProjPixMatB");
 
         DisplayMatCamA(ProjPixMatA);
         DisplayMatCamB(ProjPixMatB);
@@ -1457,7 +1487,7 @@ void GrabWBPhotos(int index, string thecolor)
 
     void SaveCSV()
     {
-        string csvfilePath = getPath("SL/ProjPointsCamA.CSV");
+        string csvfilePath = getPath(project_name + "/sl/decoded/ProjPointsCamA.CSV");
 
         //This is the writer, it writes to the filepath
         StreamWriter writer = new StreamWriter(csvfilePath);
@@ -1477,7 +1507,7 @@ void GrabWBPhotos(int index, string thecolor)
         writer.Close();
 
         //Repeat for Cam b
-        string csvfilePathB = getPath("SL/ProjPointsCamB.CSV");
+        string csvfilePathB = getPath(project_name + "/sl/decoded/ProjPointsCamB.CSV");
 
         //This is the writer, it writes to the filepath
         StreamWriter writerB = new StreamWriter(csvfilePathB);
