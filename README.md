@@ -165,6 +165,49 @@ next save the whole blender project
 ![image](https://github.com/quitmeyer/GraycodeToPLYConverter/assets/742627/6f4da6f5-b563-4c2f-b1ab-1f49ee6a7842)
 
 ## Import into Unity
+Open your unity project
+click "Import New Asset"
+![image](https://github.com/quitmeyer/GraycodeToPLYConverter/assets/742627/2d952038-be93-42e5-99c2-f5228521fbf2)
+
+Choose your blender file(it might take a second to load)
+
+you can drag it into your scene now
+![image](https://github.com/quitmeyer/GraycodeToPLYConverter/assets/742627/36f859f0-3207-4dd0-b268-fe95f11b8143)
+
+you need to set your projector camera as your "main camera"
+and deactivate any cameras above it
+
+Bring your game window to the live projector screen
+Hit F11 to make full screen, all pixels
+
+now you can dress your scene and do as you wish, and the cameras and objects should be aligned!
+![image](https://github.com/quitmeyer/GraycodeToPLYConverter/assets/742627/07d1e307-4f81-4f2b-83f8-a5f55b0faacd)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ### (optional for now) do distortion in blender
@@ -184,7 +227,6 @@ eg. ocv is
 //	fx, fy, cx, cy, k1, k2, p1, p2
 
 //////
-
 
 
 ## Fresh Full Scan (Calibrate Camera and Projector Intrinsics)
