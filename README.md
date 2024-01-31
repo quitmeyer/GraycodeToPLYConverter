@@ -48,7 +48,7 @@ To help with colmap processing, your data should eventually be in a directory/fi
 ```
 └── GlowcakeDatabaseGoocher.py
 └── runGrayCodeGoocher.bat
-├── project_scan_date
+├── project_scan_date (eg. Scan_2024-01-30T22_31Z)
 │   ├── pg
 │   │   ├── models
 │   │   ├── img
@@ -73,50 +73,27 @@ To help with colmap processing, your data should eventually be in a directory/fi
 
 # Colmap Processing
 
+## Simple Scan Process
+After doing a structrured light scan, copy your scan folder to where it sits at the same level at the GraycodeGoocher.py
 
-## Fresh Full Scan (Calibrate Camera and Projector Intrinsics)
-If the cameras and projector are substantially different from other scans, we need to do a really good full scan and get the camera and projector intrinsics from this. Later if we already have the intrinsics for the cameras and projectors, we can skip to the "Minimal Scan" option, where we do not need to do a long format photogrammetry scan.
+## Colmap Matching (round 1)
+Open Colmap
+Create new project
+make a new database in the 
+project->pg folder
+call it "database.db"
+set the images to point to the project->pg->img folder
+![image](https://github.com/quitmeyer/GraycodeToPLYConverter/assets/742627/7274f184-5800-4d96-99df-79616aaabccb)
 
+click "Feature Extraction"
+choose : Camera mode
+Choose : "Shared per sub-folder"
+click "Extract"
+close that dialog
 
-
-### Photogrammetry
-
-##### Stereo Capture with Brio cameras
-
-This runs a program that captures stereo, high res photos of a scene. Once started it should make a beep/ding sound every time the computer captures an image. The output shows how many photos have been taken. This is useful for a photogrammetry scan of a scene.
-
-#### Run the Capture
-Run example_aruco_
-
-Calibrate_camera_dualcamera_photos_cpp
-
-Collect a bunch of photos
-It takes a photo about every two seconds and should make your computer ding
-
-#### Save the photos
-It takes a while to save the photos because they are large. So we save them all after the program have captured photos to memory.
-
-Press "s" or "esc" to start saving
-Files get saved to
-C:\Users\andre\Desktop\Glowcake Hoss\Scans
-
-
-
-
-### Colmap Full Scan Process Photogrammetry
-You need to go into the PG photogrammetry folders called A and B and find the photos taken in the position of the canonical cameras for the Structured light ((usually this is your photo called camA_im0.png)) and rename two of those images to be copies of the canonical camera images
-* 
-* a/CamA_WB_1.png
-* And
-* b/CamB_WB_1.png
-
-in colmap create a new database with an images folder that points to where the a and b subfolders are
-* click "Feature Extraction"
-* choose "shared intrinsics per subfolder
-* Choose the camera model you are using (currently we are using Radial)
-* run feature extraction
-* next run Match features
-
+now click "Feature Matching"
+click "Run"
+close the dialog
 
 
 # Graycode Matches Injector (Goocher)
@@ -128,6 +105,7 @@ Run the goocher to tie things together
 ## Setup Goocher Command Line Arguments
 You might need to customize the goocher to the projector you are using
 Here is a list of the arguments that the Graycode goocher contains and their defaults
+you can edit the rungraycodegoocher.bat file to change these
 ```
     parser.add_argument("--project", default="glowcake_01_2024")
     parser.add_argument("--db", default="pg/database.db")
@@ -184,6 +162,54 @@ eg. ocv is
 //////
 
 
+
+## Fresh Full Scan (Calibrate Camera and Projector Intrinsics)
+If the cameras and projector are substantially different from other scans, we need to do a really good full scan and get the camera and projector intrinsics from this. Later if we already have the intrinsics for the cameras and projectors, we can skip to the "Minimal Scan" option, where we do not need to do a long format photogrammetry scan.
+
+
+
+### Photogrammetry
+
+##### Stereo Capture with Brio cameras
+
+This runs a program that captures stereo, high res photos of a scene. Once started it should make a beep/ding sound every time the computer captures an image. The output shows how many photos have been taken. This is useful for a photogrammetry scan of a scene.
+
+#### Run the Capture
+Run example_aruco_
+
+Calibrate_camera_dualcamera_photos_cpp
+
+Collect a bunch of photos
+It takes a photo about every two seconds and should make your computer ding
+
+#### Save the photos
+It takes a while to save the photos because they are large. So we save them all after the program have captured photos to memory.
+
+Press "s" or "esc" to start saving
+Files get saved to
+C:\Users\andre\Desktop\Glowcake Hoss\Scans
+
+
+
+
+### Colmap Full Scan Process Photogrammetry
+You need to go into the PG photogrammetry folders called A and B and find the photos taken in the position of the canonical cameras for the Structured light ((usually this is your photo called camA_im0.png)) and rename two of those images to be copies of the canonical camera images
+* 
+* a/CamA_WB_1.png
+* And
+* b/CamB_WB_1.png
+
+in colmap create a new database with an images folder that points to where the a and b subfolders are
+* click "Feature Extraction"
+* choose "shared intrinsics per subfolder
+* Choose the camera model you are using (currently we are using Radial)
+* run feature extraction
+* next run Match features
+
+
+
+
+~~~ old stuff
 ## New command line tests
 
 Blank out the lines underneath Cam A and Cam B (don't d delete leave blank
