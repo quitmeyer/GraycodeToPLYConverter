@@ -249,27 +249,42 @@ def example_usage():
     print("doing stuff")
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--project", default="glowcake_01_2024")
+    parser.add_argument("--project", default="Scan_2024-01-30T22_31Z")
     parser.add_argument("--db", default="pg/database.db")
-    parser.add_argument("--camAPoints", default="sl/ProjPointsCamA.CSV")
-    parser.add_argument("--camBPoints", default="sl/ProjPointsCamB.CSV")
+    parser.add_argument("--subSample", default="0")
+
+    parser.add_argument("--camAPoints", default="sl/decoded/ProjPointsCamA.CSV")
+    parser.add_argument("--camBPoints", default="sl/decoded/ProjPointsCamB.CSV")
     parser.add_argument("--projWidth", default="3840")
     parser.add_argument("--projHeight", default="2160")
     parser.add_argument("--projImage", default="white3840.png")
-    parser.add_argument("--subSample", default="1")
     parser.add_argument("--camModel", default="Radial")
+    parser.add_argument("--proj_intr", default="6666.384061, 1937.552416, 1288.059159, -0.090987, 0.605829")
+    parser.add_argument("--camA_intr", default="3060.217151, 2010.003211, 980.941691, 0.176927, -0.308681")
+    parser.add_argument("--camB_intr", default="3058.494720, 2047.179953, 1098.225191, 0.193613, -0.357522") #todo - make it so you can add intrinsics in the goocher.bat
 
+
+    '''
+    seen from the back of the cameras
+    cam right A
+3060.217151, 2010.003211, 980.941691, 0.176927, -0.308681
+cam left
+3058.494720, 2047.179953, 1098.225191, 0.193613, -0.357522
+viewsonic projector
+6666.384061, 1937.552416, 1288.059159, -0.090987, 0.605829
+    '''
 
 
     args = parser.parse_args()
 
-    #rowsA = ONLYTAKE EVERY Xth entry
     subSample=int(args.subSample)
-    newDBname = args.db[:-3]+"_"+args.camModel+"_"+str(subSample)+"_new.db"
     projectName= args.project
-    shutil.copy(args.db, newDBname)
+    DBpath = projectName+"/"+args.db
+    newDBpath = args.db[:-3]+"_"+args.camModel+"_"+str(subSample)+"_new.db"
+    newDBpath=projectName+"/"+newDBpath
+    shutil.copy(DBpath,newDBpath)
 
-    if os.path.exists(projectName+"/"+newDBname):
+    if os.path.exists(newDBpath):
         print("Good! database path already exists -- .")
         print("let's gooch it up")
     #    return
@@ -282,7 +297,7 @@ def example_usage():
 
     # Open the database.
     
-    db = COLMAPDatabase.connect(projectName+"/"+newDBname)
+    db = COLMAPDatabase.connect(newDBpath)
     print("database opened")
 
     # For convenience, try creating all the tables upfront.
@@ -293,7 +308,7 @@ def example_usage():
     ### Get the Canonical Camera's ID
     print("\n List Canonical Camera A  ")  
 
-    canonCamA = db.execute("SELECT * from Images where name='a/CamA_WB_1.png'")
+    canonCamA = db.execute("SELECT * from Images where name='a/CamA_canon.png'")
  
 
     for i in canonCamA:
@@ -306,7 +321,7 @@ def example_usage():
 
     print("\n List Canonical Camera B  ")  
 
-    canonCamB = db.execute("SELECT * from Images where name='b/CamB_WB_1.png'")
+    canonCamB = db.execute("SELECT * from Images where name='b/CamB_canon.png'")
     for i in canonCamB:
         print("\n canonical Camera B  ")  
         print(i)  
@@ -367,7 +382,7 @@ def example_usage():
                 p_camera_id1 = db.add_camera(p_model1, p_width1, p_height1, p_params1)
                 print("added the "+args.camModel+" projector camera with id = "+str(p_camera_id1))
         case "Radial":
-                p_model1, p_width1, p_height1, p_params1 =  3, args.projWidth, args.projHeight, np.array((5400, int(args.projWidth)/2, int(args.projHeight)*.8,0,0)) #you need this many arguments for an SIMPLE RADIAL param or it will crash everything
+                p_model1, p_width1, p_height1, p_params1 =  3, args.projWidth, args.projHeight, np.array((6666.384061, 1937.552416, 1288.059159, -0.090987, 0.605829)) #you need this many arguments for an SIMPLE RADIAL param or it will crash everything
                 p_camera_id1 = db.add_camera(p_model1, p_width1, p_height1, p_params1)
                 print("added the "+args.camModel+" projector camera with id = "+str(p_camera_id1))
         case "OpenCV":
@@ -395,7 +410,7 @@ def example_usage():
     fieldsA = []
     rowsA = []
     # reading csv file for Camera A
-    with open(projectName+"/sl/decoded/"+args.camAPoints, 'r') as csvfile:
+    with open(projectName+"/"+args.camAPoints, 'r') as csvfile:
     # creating a csv reader object
         csvreader = csv.reader(csvfile)
       
@@ -428,7 +443,7 @@ def example_usage():
     fieldsB = []
     rowsB = []
     # reading csv file for Camera B
-    with open(projectName+"/sl/decoded/"+args.camBPoints, 'r') as csvfileB:
+    with open(projectName+"/"+args.camBPoints, 'r') as csvfileB:
     # creating a csv reader object
         csvreaderB = csv.reader(csvfileB)
       
