@@ -48,7 +48,7 @@ To help with colmap processing, your data should eventually be in a directory/fi
 ```
 └── GlowcakeDatabaseGoocher.py
 └── runGrayCodeGoocher.bat
-├── project_scan_date
+├── project_scan_date (eg. Scan_2024-01-30T22_31Z)
 │   ├── pg
 │   │   ├── models
 │   │   ├── img
@@ -72,6 +72,161 @@ To help with colmap processing, your data should eventually be in a directory/fi
 ```
 
 # Colmap Processing
+
+## Simple Scan Process
+After doing a structrured light scan, copy your scan folder to where it sits at the same level at the GraycodeGoocher.py
+
+## Colmap Matching (round 1)
+Open Colmap
+Create new project
+make a new database in the 
+project->pg folder
+call it "database.db"
+set the images to point to the project->pg->img folder
+![image](https://github.com/quitmeyer/GraycodeToPLYConverter/assets/742627/7274f184-5800-4d96-99df-79616aaabccb)
+
+click "Feature Extraction"
+choose : Camera mode
+Choose : "Shared per sub-folder"
+click "Extract"
+close that dialog
+
+now click "Feature Matching"
+click "Run"
+close the dialog
+
+
+# Graycode Matches Injector (Goocher)
+
+Run the goocher to tie things together
+
+## Setup Goocher Command Line Arguments
+You might need to customize the goocher to the projector you are using
+Here is a list of the arguments that the Graycode goocher contains and their defaults
+you can edit the rungraycodegoocher.bat file to change these
+```
+    parser.add_argument("--project", default="glowcake_01_2024")
+    parser.add_argument("--db", default="pg/database.db")
+    parser.add_argument("--camAPoints", default="sl/ProjPointsCamA.CSV")
+    parser.add_argument("--camBPoints", default="sl/ProjPointsCamB.CSV")
+    parser.add_argument("--projWidth", default="3840")
+    parser.add_argument("--projHeight", default="2160")
+    parser.add_argument("--projImage", default="white3840.png")
+    parser.add_argument("--subSample", default="1")
+    parser.add_argument("--camModel", default="Radial")
+
+```
+it should tell you you are finished graycode gooching, and you should have a new database file in your project!
+
+## Run Colmap AGAIN
+
+back in colmap click edit project
+
+choose the NEW database file you made with the goocher
+
+![image](https://github.com/quitmeyer/GraycodeToPLYConverter/assets/742627/89ee8569-74ae-45d4-a257-e9f48d0d6147)
+click save
+
+click the database button
+manually edit the cameras intrinsics to match what you collected earlier
+
+![image](https://github.com/quitmeyer/GraycodeToPLYConverter/assets/742627/305fe36c-8922-4790-bf24-0df2870ce36b)
+
+go to Reconstruction->reconstruction options
+click "Triangulation..."
+uncheck "ignore two-view"
+go to "Bundle adjust..."
+uncheck all three "refine..."
+
+
+
+Hit the big play button, and then in a minute or two you should have your model!
+
+![image](https://github.com/quitmeyer/GraycodeToPLYConverter/assets/742627/0fbd0614-25f8-436f-b7f4-d7aa026eab01)
+
+click File->export model as Text
+save your model in your pg->models folder
+
+
+# Manipulating the Mesh
+
+## Import into Blender
+
+There is a script you can find online that will import colmap scenes into blender. When importing, in the import options, make sure to click “import point cloud as mesh” so that you get something that can actually be rendered in blender (you can’t render pointclouds in blender without a headache)
+
+File - > Import - > Colamp
+make sure to click "import points as mesh object"
+
+![image](https://github.com/quitmeyer/GraycodeToPLYConverter/assets/742627/93ae93d6-8e9f-4ad8-b882-0fe5b1155d1a)
+
+It should import and you should see your scan
+
+next save the whole blender project
+![image](https://github.com/quitmeyer/GraycodeToPLYConverter/assets/742627/6f4da6f5-b563-4c2f-b1ab-1f49ee6a7842)
+
+## Import into Unity
+Open your unity project
+click "Import New Asset"
+![image](https://github.com/quitmeyer/GraycodeToPLYConverter/assets/742627/2d952038-be93-42e5-99c2-f5228521fbf2)
+
+Choose your blender file(it might take a second to load)
+
+you can drag it into your scene now
+![image](https://github.com/quitmeyer/GraycodeToPLYConverter/assets/742627/36f859f0-3207-4dd0-b268-fe95f11b8143)
+
+you need to set your projector camera as your "main camera"
+and deactivate any cameras above it
+
+Bring your game window to the live projector screen
+Hit F11 to make full screen, all pixels
+
+now you can dress your scene and do as you wish, and the cameras and objects should be aligned!
+![image](https://github.com/quitmeyer/GraycodeToPLYConverter/assets/742627/07d1e307-4f81-4f2b-83f8-a5f55b0faacd)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### (optional for now) do distortion in blender
+
+https://blender.stackexchange.com/questions/181062/how-to-apply-custom-lens-distortion-parameters-to-a-rendered-image
+
+(Other info [https://blender.stackexchange.com/questions/121841/customize-blender-camera-distortion](https://blender.stackexchange.com/questions/121841/customize-blender-camera-distortion)
+
+insert camera params. Cam params from colmap
+
+[https://colmap.github.io/cameras.html](https://colmap.github.io/cameras.html)
+
+[https://github.com/colmap/colmap/blob/main/src/colmap/sensor/models.h](https://github.com/colmap/colmap/blob/main/src/colmap/sensor/models.h)
+
+eg. ocv is 
+
+//	fx, fy, cx, cy, k1, k2, p1, p2
+
+//////
 
 
 ## Fresh Full Scan (Calibrate Camera and Projector Intrinsics)
@@ -119,71 +274,8 @@ in colmap create a new database with an images folder that points to where the a
 
 
 
-# Graycode Matches Injector (Goocher)
 
-Run the goocher to tie things together
-* set up your command line parameters for the goocher by editing the runGraycodeGoocher.bat
-* 
-
-## Setup Goocher Command Line Arguments
-You might need to customize the goocher to the projector you are using
-Here is a list of the arguments that the Graycode goocher contains and their defaults
-```
-    parser.add_argument("--project", default="glowcake_01_2024")
-    parser.add_argument("--db", default="pg/database.db")
-    parser.add_argument("--camAPoints", default="sl/ProjPointsCamA.CSV")
-    parser.add_argument("--camBPoints", default="sl/ProjPointsCamB.CSV")
-    parser.add_argument("--projWidth", default="3840")
-    parser.add_argument("--projHeight", default="2160")
-    parser.add_argument("--projImage", default="white3840.png")
-    parser.add_argument("--subSample", default="1")
-    parser.add_argument("--camModel", default="Radial")
-
-```
-
-7) Run Colmap AGAIN
-
- Make sure that “ignore two-view geometries” is UNCHECKED in the reconstruction options
-
-Make sure to click “refine principle point” in reconstruction options
-
-(though maybe just refine focal distance? This actually seems a lot better!)
-
-Export the reconstructed model (it took 26 minutes to reconstruct my last scan)
-
-WATCH OUT FOR CAMERA SWITCHING!
-
-DOUBLE CHECK FEATURES on CAMA_WB1 
-
-7)
-
-# Manipulating the Mesh
-
-## Import into Blender
-
-There is a script you can find online that will import colmap scenes into blender. When importing, in the import options, make sure to click “import point cloud as mesh” so that you get something that can actually be rendered in blender (you can’t render pointclouds in blender without a headache)
-
-You also need to import the revopoint scan
-
-8) do distortion in blender
-
-https://blender.stackexchange.com/questions/181062/how-to-apply-custom-lens-distortion-parameters-to-a-rendered-image
-
-(Other info [https://blender.stackexchange.com/questions/121841/customize-blender-camera-distortion](https://blender.stackexchange.com/questions/121841/customize-blender-camera-distortion)
-
-insert camera params. Cam params from colmap
-
-[https://colmap.github.io/cameras.html](https://colmap.github.io/cameras.html)
-
-[https://github.com/colmap/colmap/blob/main/src/colmap/sensor/models.h](https://github.com/colmap/colmap/blob/main/src/colmap/sensor/models.h)
-
-eg. ocv is 
-
-//	fx, fy, cx, cy, k1, k2, p1, p2
-
-//////
-
-
+~~~ old stuff
 ## New command line tests
 
 Blank out the lines underneath Cam A and Cam B (don't d delete leave blank
