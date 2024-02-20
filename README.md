@@ -295,3 +295,98 @@ colmap.bat point_triangulator --database_path C:\Users\andre\Desktop\colmapPy\de
 reduce track length to 2!
 
 colmap.bat mapper --database_path C:\Users\andre\Desktop\colmapPy\demoGrayCode\vs_dec5_SimplePinhole_0_new.db --image_path C:\Users\andre\Desktop\colmapPy\demoGrayCode\img --input_path C:\Users\andre\Desktop\colmapPy\demoGrayCode\VSdec5_tri --output_path C:\Users\andre\Desktop\colmapPy\demoGrayCode\VSdec5_tri_map --Mapper.tri_ignore_two_view_tracks 1
+
+
+# Future Structures for Multiview
+This is for a single object being scanned by an arbitrary number of Proj-Cam-Cam triangles
+
+This would be the resulting structure for a scan with two separate structured light scans and knowledge of existing intrinsics
+
+```
+└── GlowcakeDatabaseGoocher.py
+└── runGrayCodeGoocher.bat
+├── project_scan_date (eg. Scan_2024-01-30T22_31Z)
+│   ├── pg
+│   │   ├── models
+│   │   ├── img
+│   │   │   ├── t0_a
+│   │   │   │   └── "CamA_canon"+".png"
+│   │   │   ├── t0_b
+│   │   │   │   └── "CamB_canon"+".png"
+│   │   │   ├── t1_a
+│   │   │   │   └── "CamA_canon"+".png"
+│   │   │   ├── t1_b
+│   │   │   │   └── "CamB_canon"+".png"
+│   │   ├── img_injected
+│   │   │   ├── t0_a
+│   │   │   │   └── "CamA_canon"+".png"
+│   │   │   ├── t0_b
+│   │   │   │   └── "CamB_canon"+".png"
+│   │   │   ├── t0_projector
+│   │   │   │   └── white3840.png (a blank png with the width and height of the projector you used)
+│   │   │   ├── t1_a
+│   │   │   │   └── "CamA_canon"+".png"
+│   │   │   ├── t1_b
+│   │   │   │   └── "CamB_canon"+".png"
+│   │   │   ├── t1_projector
+│   │   │   │   └── white3840.png (a blank png with the width and height of the projector you used)
+│   └── database.db
+│   └── database_injected.db
+│   ├── sl_t0
+│   │   └── triangle_info.yaml
+│   │   ├── a
+│   │   │   └── "CamA_" + graycodeseriesnum + ".png"
+│   │   ├── b
+│   │   │   └── "CamB_" + graycodeseriesnum + ".png"
+│   │   ├── proj
+│   │   ├── decoded
+│   │   │   └── ProjPixMatA.png
+│   │   │   └── ProjPixMatB.png
+│   │   │   └── ProjPointsCamA.CSV
+│   │   │   └── ProjPointsCamB.CSV
+│   ├── sl_t1
+│   │   └── triangle_info.yaml
+│   │   ├── a
+│   │   │   └── "CamA_" + graycodeseriesnum + ".png"
+│   │   ├── b
+│   │   │   └── "CamB_" + graycodeseriesnum + ".png"
+│   │   ├── proj
+│   │   ├── decoded
+│   │   │   └── ProjPixMatA.png
+│   │   │   └── ProjPixMatB.png
+│   │   │   └── ProjPointsCamA.CSV
+│   │   │   └── ProjPointsCamB.CSV
+
+
+```
+
+it would have a yaml file in each SL scan that is formatted like this:
+
+```
+YAML
+
+# Example YAML file with Light Triangles and Nodes that are projectors or cameras
+# Each light triangle has one projector and two cameras
+
+LightTriangle:
+  -name: t0
+  -a:
+    - type: cam
+      width: 4096
+      height: 2160
+      cameramodel: Radial
+      intrinsics: 3060.217151, 2010.003211, 980.941691, 0.176927, -0.308681
+  -b: 
+    - type: cam
+      width: 4096
+      height: 2160
+      cameramodel: Radial
+      intrinsics: 3058.494720, 2047.179953, 1098.225191, 0.193613, -0.357522
+  -projector: 
+    - type: projector
+      width: 3840
+      height: 2160
+      cameramodel: Radial
+      intrinsics: 3058.494720, 2047.179953, 1098.225191, 0.193613, -0.357522
+
+```
