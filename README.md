@@ -2,6 +2,14 @@
 
 ## Unity Graycode Scan
 
+### Unity Project - Open CV
+the unity project relies on an opencv library
+download it here
+https://drive.google.com/file/d/1ZIko9aMS_3S2IplblNl7VXLaJkPsjrMt/view?usp=sharing
+unzip it to your Assets folder in the unity project
+![image](https://github.com/quitmeyer/GraycodeToPLYConverter/assets/742627/21b4c18b-2dba-4d77-9f7e-4ac0ecd625e8)
+
+
 ### brio notes
 When using two brio cameras, they historically have problems outputting the full 4k they are suposed to. One workaround has been to plug them both into a USB C hub, and plug it into a USBC thunderbolt port
 
