@@ -283,18 +283,7 @@ in colmap create a new database with an images folder that points to where the a
 
 
 
-~~~ old stuff
-## New command line tests
 
-Blank out the lines underneath Cam A and Cam B (don't d delete leave blank
-
-Gotta run Clear points!
-
-colmap.bat point_triangulator --database_path C:\Users\andre\Desktop\colmapPy\demoGrayCode\vs_dec5_SimplePinhole_0_new.db --image_path C:\Users\andre\Desktop\colmapPy\demoGrayCode\img --input_path C:\Users\andre\Desktop\colmapPy\demoGrayCode\VSdec5_Gooched_simplepinManEdit --output_path C:\Users\andre\Desktop\colmapPy\demoGrayCode\VSdec5_tri --Mapper.tri_ignore_two_view_tracks 1 --clear_points 1
-
-reduce track length to 2!
-
-colmap.bat mapper --database_path C:\Users\andre\Desktop\colmapPy\demoGrayCode\vs_dec5_SimplePinhole_0_new.db --image_path C:\Users\andre\Desktop\colmapPy\demoGrayCode\img --input_path C:\Users\andre\Desktop\colmapPy\demoGrayCode\VSdec5_tri --output_path C:\Users\andre\Desktop\colmapPy\demoGrayCode\VSdec5_tri_map --Mapper.tri_ignore_two_view_tracks 1
 
 
 # Future Structures for Multiview
@@ -390,3 +379,29 @@ LightTriangle:
       intrinsics: 3058.494720, 2047.179953, 1098.225191, 0.193613, -0.357522
 
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+~~~ old stuff
+## New command line tests
+
+Blank out the lines underneath Cam A and Cam B (don't d delete leave blank
+
+Gotta run Clear points!
+
+colmap.bat point_triangulator --database_path C:\Users\andre\Desktop\colmapPy\demoGrayCode\vs_dec5_SimplePinhole_0_new.db --image_path C:\Users\andre\Desktop\colmapPy\demoGrayCode\img --input_path C:\Users\andre\Desktop\colmapPy\demoGrayCode\VSdec5_Gooched_simplepinManEdit --output_path C:\Users\andre\Desktop\colmapPy\demoGrayCode\VSdec5_tri --Mapper.tri_ignore_two_view_tracks 1 --clear_points 1
+
+reduce track length to 2!
+
+colmap.bat mapper --database_path C:\Users\andre\Desktop\colmapPy\demoGrayCode\vs_dec5_SimplePinhole_0_new.db --image_path C:\Users\andre\Desktop\colmapPy\demoGrayCode\img --input_path C:\Users\andre\Desktop\colmapPy\demoGrayCode\VSdec5_tri --output_path C:\Users\andre\Desktop\colmapPy\demoGrayCode\VSdec5_tri_map --Mapper.tri_ignore_two_view_tracks 1
