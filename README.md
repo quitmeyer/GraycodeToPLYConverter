@@ -393,7 +393,7 @@ LightTriangle:
 
 
 
-~~~ old stuff
+# old stuff
 ## New command line tests
 
 Blank out the lines underneath Cam A and Cam B (don't d delete leave blank
