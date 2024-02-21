@@ -2,6 +2,14 @@
 
 ## Unity Graycode Scan
 
+### Unity Project - Open CV
+the unity project relies on an opencv library
+download it here
+https://drive.google.com/file/d/1ZIko9aMS_3S2IplblNl7VXLaJkPsjrMt/view?usp=sharing
+unzip it to your Assets folder in the unity project
+![image](https://github.com/quitmeyer/GraycodeToPLYConverter/assets/742627/21b4c18b-2dba-4d77-9f7e-4ac0ecd625e8)
+
+
 ### brio notes
 When using two brio cameras, they historically have problems outputting the full 4k they are suposed to. One workaround has been to plug them both into a USB C hub, and plug it into a USBC thunderbolt port
 
@@ -275,7 +283,117 @@ in colmap create a new database with an images folder that points to where the a
 
 
 
-~~~ old stuff
+
+
+
+# Future Structures for Multiview
+This is for a single object being scanned by an arbitrary number of Proj-Cam-Cam triangles
+
+This would be the resulting structure for a scan with two separate structured light scans and knowledge of existing intrinsics
+
+```
+└── GlowcakeDatabaseGoocher.py
+└── runGrayCodeGoocher.bat
+├── project_scan_date (eg. Scan_2024-01-30T22_31Z)
+│   ├── pg
+│   │   ├── models
+│   │   ├── img
+│   │   │   ├── t0_a
+│   │   │   │   └── "CamA_canon"+".png"
+│   │   │   ├── t0_b
+│   │   │   │   └── "CamB_canon"+".png"
+│   │   │   ├── t1_a
+│   │   │   │   └── "CamA_canon"+".png"
+│   │   │   ├── t1_b
+│   │   │   │   └── "CamB_canon"+".png"
+│   │   ├── img_injected
+│   │   │   ├── t0_a
+│   │   │   │   └── "CamA_canon"+".png"
+│   │   │   ├── t0_b
+│   │   │   │   └── "CamB_canon"+".png"
+│   │   │   ├── t0_projector
+│   │   │   │   └── white3840.png (a blank png with the width and height of the projector you used)
+│   │   │   ├── t1_a
+│   │   │   │   └── "CamA_canon"+".png"
+│   │   │   ├── t1_b
+│   │   │   │   └── "CamB_canon"+".png"
+│   │   │   ├── t1_projector
+│   │   │   │   └── white3840.png (a blank png with the width and height of the projector you used)
+│   └── database.db
+│   └── database_injected.db
+│   ├── sl_t0
+│   │   └── triangle_info.yaml
+│   │   ├── a
+│   │   │   └── "CamA_" + graycodeseriesnum + ".png"
+│   │   ├── b
+│   │   │   └── "CamB_" + graycodeseriesnum + ".png"
+│   │   ├── proj
+│   │   ├── decoded
+│   │   │   └── ProjPixMatA.png
+│   │   │   └── ProjPixMatB.png
+│   │   │   └── ProjPointsCamA.CSV
+│   │   │   └── ProjPointsCamB.CSV
+│   ├── sl_t1
+│   │   └── triangle_info.yaml
+│   │   ├── a
+│   │   │   └── "CamA_" + graycodeseriesnum + ".png"
+│   │   ├── b
+│   │   │   └── "CamB_" + graycodeseriesnum + ".png"
+│   │   ├── proj
+│   │   ├── decoded
+│   │   │   └── ProjPixMatA.png
+│   │   │   └── ProjPixMatB.png
+│   │   │   └── ProjPointsCamA.CSV
+│   │   │   └── ProjPointsCamB.CSV
+
+
+```
+
+it would have a yaml file in each SL scan that is formatted like this:
+
+```
+YAML
+
+# Example YAML file with Light Triangles and Nodes that are projectors or cameras
+# Each light triangle has one projector and two cameras
+
+LightTriangle:
+  -name: t0
+  -a:
+    - type: cam
+      width: 4096
+      height: 2160
+      cameramodel: Radial
+      intrinsics: 3060.217151, 2010.003211, 980.941691, 0.176927, -0.308681
+  -b: 
+    - type: cam
+      width: 4096
+      height: 2160
+      cameramodel: Radial
+      intrinsics: 3058.494720, 2047.179953, 1098.225191, 0.193613, -0.357522
+  -projector: 
+    - type: projector
+      width: 3840
+      height: 2160
+      cameramodel: Radial
+      intrinsics: 3058.494720, 2047.179953, 1098.225191, 0.193613, -0.357522
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# old stuff
 ## New command line tests
 
 Blank out the lines underneath Cam A and Cam B (don't d delete leave blank
