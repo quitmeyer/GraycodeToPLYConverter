@@ -262,6 +262,9 @@ def example_usage():
     parser.add_argument("--db", default="pg/database.db")
     parser.add_argument("--subSample", default="0")
 
+
+    #Add in SL Triangles. Note: right now all 
+
     parser.add_argument("--camAPoints", default="sl/decoded/ProjPointsCamA.CSV")
     parser.add_argument("--camBPoints", default="sl/decoded/ProjPointsCamB.CSV")
     parser.add_argument("--projWidth", default="3840")
@@ -282,6 +285,62 @@ cam left
 viewsonic projector
 6666.384061, 1937.552416, 1288.059159, -0.090987, 0.605829
     '''
+
+# Read in Directory Structure to infer the number of multiview scans
+    # a single view scan will have one folder that starts with sl_, e.g. sl_t0
+    # a multiview scan will have two light triangles e.g. sl_t0 sl_t1
+
+
+    import os
+    import yaml
+    # Get the current directory
+    current_dir = os.getcwd()
+
+    # Print all subdirectories and files
+    print("Subdirectories and files:")
+    for root, dirs, files in os.walk(current_dir):
+        for dir in dirs:
+            print(os.path.join(root, dir))
+        for file in files:
+            print(os.path.join(root, file))
+
+    # Count and print subdirectories starting with "sl_"
+    sl_subdirectory_count = 0
+    sl_subdirectory_names = []
+    for root, dirs, _ in os.walk(current_dir):
+        for dir in dirs:
+# Check if "sl_" directory
+            if dir.startswith("sl_"):
+                print(f"\nFound 'sl_' directory: {os.path.join(root, dir)}")
+
+                # Check for "triangle_info.yaml"
+                yaml_file = os.path.join(root, dir, "triangle_info.yaml")
+                if os.path.exists(yaml_file):
+                    try:
+                        # Read YAML file
+                        with open(yaml_file, "r") as f:
+                            triangle_info = yaml.safe_load(f)
+
+                        # Print information (modify based on YAML structure)
+                        print(f"  Triangle name: {triangle_info.get('name', 'N/A')}")
+                        print(f"  Number of nodes: {triangle_info.get('num_nodes', 'N/A')}")
+                        # Add more print statements if needed based on your YAML structure
+
+                    except yaml.YAMLError as exc:
+                        print(f"  Error reading YAML file: {exc}")
+                else:
+                    print(f"  No 'triangle_info.yaml' found")
+
+                sl_subdirectory_count += 1
+                sl_subdirectory_names.append(os.path.join(root, dir))
+
+    print(f"\nNumber of subdirectories starting with 'sl_': {sl_subdirectory_count}")
+    print("Names of those subdirectories:")
+    for name in sl_subdirectory_names:
+        print(name)
+
+
+    num_SL_scans= sl_subdirectory_count
 
 
     args = parser.parse_args()
