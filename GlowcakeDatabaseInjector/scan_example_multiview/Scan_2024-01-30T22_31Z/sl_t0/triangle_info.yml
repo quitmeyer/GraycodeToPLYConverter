@@ -1,0 +1,19 @@
+LightTriangle:
+  a:
+    - type: cam
+      width: 4096
+      height: 2160
+      cameramodel: Radial
+      intrinsics: [3060.217151, 2010.003211, 980.941691, 0.176927, -0.308681]
+  b:
+    - type: cam
+      width: 4096
+      height: 2160
+      cameramodel: Radial
+      intrinsics: [3058.494720, 2047.179953, 1098.225191, 0.193613, -0.357522]
+  projector:
+    - type: projector
+      width: 3840
+      height: 2160
+      cameramodel: Radial
+      intrinsics: [6666.384061, 1937.552416, 1288.059159, -0.090987, 0.605829]
