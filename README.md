@@ -312,13 +312,13 @@ This would be the resulting structure for a scan with two separate structured li
 │   │   │   ├── t0_b
 │   │   │   │   └── "CamB_canon"+".png"
 │   │   │   ├── t0_projector
-│   │   │   │   └── white3840.png (a blank png with the width and height of the projector you used)
+│   │   │   │   └── blank.png (a blank png with the width and height of the projector you used)
 │   │   │   ├── t1_a
 │   │   │   │   └── "CamA_canon"+".png"
 │   │   │   ├── t1_b
 │   │   │   │   └── "CamB_canon"+".png"
 │   │   │   ├── t1_projector
-│   │   │   │   └── white3840.png (a blank png with the width and height of the projector you used)
+│   │   │   │   └── blank.png (a blank png with the width and height of the projector you used)
 │   └── database.db
 │   └── database_injected_Radial.db
 │   ├── sl_t0
