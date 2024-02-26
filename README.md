@@ -320,7 +320,7 @@ This would be the resulting structure for a scan with two separate structured li
 │   │   │   ├── t1_projector
 │   │   │   │   └── white3840.png (a blank png with the width and height of the projector you used)
 │   └── database.db
-│   └── database_injected.db
+│   └── database_injected_Radial.db
 │   ├── sl_t0
 │   │   └── triangle_info.yaml
 │   │   ├── a
