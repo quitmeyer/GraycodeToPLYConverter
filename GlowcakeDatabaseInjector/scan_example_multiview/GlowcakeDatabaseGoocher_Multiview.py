@@ -321,6 +321,7 @@ def example_usage():
     num_SL_scans=0
     sl_subdirectory_count = 0
     sl_subdirectory_names = []
+    intrinsics_missing = []
     for root, dirs, _ in os.walk(current_dir):
         for dir in dirs:
 
@@ -340,18 +341,33 @@ def example_usage():
 
                         # Print information (modify based on YAML structure)
                         print(f"  Triangle name: {dir}")
+                        node_a = sl_scans_yaml[num_SL_scans]["a"][0]
                         print("node type: "+ sl_scans_yaml[num_SL_scans]["a"][0]["type"])
                         print("width: "+ str(sl_scans_yaml[num_SL_scans]["a"][0]["width"]))
                         print("height: "+ str(sl_scans_yaml[num_SL_scans]["a"][0]["height"]))
                         print("cameramodel: ", sl_scans_yaml[num_SL_scans]["a"][0]["cameramodel"]) 
-                        print("intrinsics ", sl_scans_yaml[num_SL_scans]["a"][0]["intrinsics"])
+                        # Specific check for "intrinsics"
+                        if "intrinsics" in node_a:
+                            print("intrinsics:", node_a["intrinsics"])
+                            intrinsics_missing.append(False)
 
+                        else:
+                            print("Key 'intrinsics' not found in node 'a'")
+                            intrinsics_missing.append(True)
 
+                        node_b = sl_scans_yaml[num_SL_scans]["b"][0]
                         print("node type: "+ sl_scans_yaml[num_SL_scans]["b"][0]["type"])
                         print("width: "+ str(sl_scans_yaml[num_SL_scans]["b"][0]["width"]))
                         print("height: "+ str(sl_scans_yaml[num_SL_scans]["b"][0]["height"]))
                         print("cameramodel: ", sl_scans_yaml[num_SL_scans]["b"][0]["cameramodel"]) 
-                        print("intrinsics ", sl_scans_yaml[num_SL_scans]["b"][0]["intrinsics"])
+                        # Specific check for "intrinsics"
+                        if "intrinsics" in node_b:
+                            print("intrinsics:", node_b["intrinsics"])
+                            #intrinsics_missing[FALSE]
+
+                        else:
+                            print("Key 'intrinsics' not found in node 'b'")
+                            intrinsics_missing[t]=True
 
                         
                         print("node type: "+ sl_scans_yaml[num_SL_scans]["projector"][0]["type"])
@@ -437,15 +453,16 @@ def example_usage():
 
 
             #Update Intrinsics for Cam A
-            new_params = sl_scans_yaml[t]["a"][0]["intrinsics"]
-            new_params_array = np.array(new_params)
-            if IS_PYTHON3:
-                new_params_blob = new_params_array.tobytes()
-            else:
-                new_params_blob = np.getbuffer(new_params_array)
-            #new_params_blob = array_to_blob(new_params_array)
-            db.update_camera_params( i[0], new_params_blob)
-
+            if(intrinsics_missing[t]!=True):
+                new_params = sl_scans_yaml[t]["a"][0]["intrinsics"]
+                new_params_array = np.array(new_params)
+                if IS_PYTHON3:
+                    new_params_blob = new_params_array.tobytes()
+                else:
+                    new_params_blob = np.getbuffer(new_params_array)
+                #new_params_blob = array_to_blob(new_params_array)
+                db.update_camera_params( i[0], new_params_blob)
+            #TODO update intrinsics for cam B
 
         TriB.append(db.execute("SELECT * from Images where name='t"+str(t)+"_b/CamB_canon.png'"))
     
@@ -456,7 +473,7 @@ def example_usage():
             print("\n Image ID Canon Cam B_" +str(t))  
             print(i[0])
             TriB_imgid.append( i[0])
-            
+
             #Update Intrinsics for Cam B
             new_params = sl_scans_yaml[t]["b"][0]["intrinsics"]
             new_params_array = np.array(new_params)

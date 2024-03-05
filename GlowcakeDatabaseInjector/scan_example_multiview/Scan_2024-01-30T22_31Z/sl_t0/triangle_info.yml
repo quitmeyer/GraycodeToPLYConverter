@@ -4,7 +4,6 @@ LightTriangle:
       width: 4096
       height: 2160
       cameramodel: Radial
-      intrinsics: [3060.217151, 2010.003211, 980.941691, 0.176927, -0.308681]
   b:
     - type: cam
       width: 4096
