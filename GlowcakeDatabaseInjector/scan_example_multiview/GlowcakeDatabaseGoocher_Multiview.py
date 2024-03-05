@@ -456,6 +456,7 @@ def example_usage():
             print("\n Image ID Canon Cam B_" +str(t))  
             print(i[0])
             TriB_imgid.append( i[0])
+            
             #Update Intrinsics for Cam B
             new_params = sl_scans_yaml[t]["b"][0]["intrinsics"]
             new_params_array = np.array(new_params)
