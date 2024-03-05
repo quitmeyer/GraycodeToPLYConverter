@@ -225,6 +225,24 @@ class COLMAPDatabase(sqlite3.Connection):
     def update_two_view_geometries(cursor, matches, pair_id):
         cursor.execute("UPDATE two_view_geometries SET data=?, rows=?, cols=? WHERE pair_id=?",
             (array_to_blob(matches), matches.shape[0], matches.shape[1], pair_id))
+        
+    def update_camera_params(self, camera_id, new_params):
+        """
+        Updates the 'params' column for a specific camera in the 'cameras' table.
+
+        Args:
+            conn: A connection object to the SQLite database.
+            camera_id: The integer ID of the camera to update.
+            new_params: The new byte array (BLOB) for the 'params' column.
+        """
+        cursor = self.cursor()
+        update_query = """
+        UPDATE cameras
+        SET params = ?
+        WHERE camera_id = ?
+        """
+
+        cursor.execute(update_query, (new_params, camera_id))
 
 
     def add_two_view_geometry(self, image_id1, image_id2, matches,
@@ -418,6 +436,17 @@ def example_usage():
             TriA_imgid.append( i[0])
 
 
+            #Update Intrinsics for Cam A
+            new_params = sl_scans_yaml[t]["a"][0]["intrinsics"]
+            new_params_array = np.array(new_params)
+            if IS_PYTHON3:
+                new_params_blob = new_params_array.tobytes()
+            else:
+                new_params_blob = np.getbuffer(new_params_array)
+            #new_params_blob = array_to_blob(new_params_array)
+            db.update_camera_params( i[0], new_params_blob)
+
+
         TriB.append(db.execute("SELECT * from Images where name='t"+str(t)+"_b/CamB_canon.png'"))
     
 
@@ -427,6 +456,15 @@ def example_usage():
             print("\n Image ID Canon Cam B_" +str(t))  
             print(i[0])
             TriB_imgid.append( i[0])
+            #Update Intrinsics for Cam B
+            new_params = sl_scans_yaml[t]["b"][0]["intrinsics"]
+            new_params_array = np.array(new_params)
+            if IS_PYTHON3:
+                new_params_blob = new_params_array.tobytes()
+            else:
+                new_params_blob = np.getbuffer(new_params_array)
+            #new_params_blob = array_to_blob(new_params_array)
+            db.update_camera_params( i[0], new_params_blob)
 
 
     TriP = []
