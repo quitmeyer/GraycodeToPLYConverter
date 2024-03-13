@@ -1105,7 +1105,7 @@ public class StructuredLightGrayCodeStereo : MonoBehaviour
         Utils.matToTexture2D(tempMat, texturego, true, 0, true);
 
         texturego.Apply(); //OMGFG IT JUST NEEDED APPLY!!! WTF
-        displayTexture.Resize(theMat.cols(), theMat.rows());
+        displayTexture.Reinitialize(theMat.cols(), theMat.rows());
         displayTexture.Apply();
         Graphics.CopyTexture(texturego, displayTexture);
         displayTexture.Apply();
