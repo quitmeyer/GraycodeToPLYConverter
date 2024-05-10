@@ -239,8 +239,13 @@ def decodeGraycode(photos_cam_a, photos_cam_b, shadow_mask_a, shadow_mask_b,
 
   for i in range(len(photos_cam_a)):
     # Get the current grayscale image for each camera
-    image_a = photos_cam_a[i]
-    image_b = photos_cam_b[i]
+    
+    # Get the dimensions of the grayscale image
+    height, width = photos_cam_a[i].shape
+
+    # Create a new RGB image with the same dimensions and data type (uint8)
+    image_a = np.zeros((height, width, 3), dtype=np.uint8)
+    image_b = np.zeros((height, width, 3), dtype=np.uint8)
 
     # Loop through each pixel of the image
     for j in range(image_a.shape[0]):
@@ -255,9 +260,10 @@ def decodeGraycode(photos_cam_a, photos_cam_b, shadow_mask_a, shadow_mask_b,
           #proj_pixel = cv2.structured_light.GrayCodePattern.getProjPixel(pattern_images, x, y)
           if proj_pixel_a is not None:
             # Calculate and store camera and projector pixel coordinates for Camera A
-            color_a = [0, proj_pixel_a[1] * projector_res_divider / projector_pix_height * 255, 
-                       proj_pixel_a[0] * projector_res_divider / projector_pix_width * 255, 255]
-            image_a.put(j, k, color_a)
+            color_a =[0,255,255]
+            #color_a = [0, proj_pixel_a[1] * projector_res_divider/projector_pix_height * 255, 
+            #           proj_pixel_a[0] * projector_res_divider / projector_pix_width * 255, 255]
+            image_a[j, k]= color_a
             Xc_a.append(k)
             Yc_a.append(j)
             Xp_a.append(proj_pixel_a[0])
@@ -268,9 +274,12 @@ def decodeGraycode(photos_cam_a, photos_cam_b, shadow_mask_a, shadow_mask_b,
           proj_pixel_b = Ppattern.getProjPixel(photos_cam_b, j, k	)
 
           if proj_pixel_b is not None:
-            color_b = [0, proj_pixel_b[1] * projector_res_divider / projector_pix_height * 255, 
-                       proj_pixel_b[0] * projector_res_divider / projector_pix_width * 255, 255]
-            image_b.put(j, k, color_b)
+            color_b =[0,255,255]
+
+            #color_b = [0, proj_pixel_b[1] * projector_res_divider / projector_pix_height * 255, 
+            #          proj_pixel_b[0] * projector_res_divider / projector_pix_width * 255, 255]
+            image_b[j, k]= color_b
+
             Xc_b.append(k)
             Yc_b.append(j)
             Xp_b.append(proj_pixel_b[0])
@@ -366,10 +375,10 @@ print("starting to decode Graycode")
 projector_pix_width = 1920
 projector_pix_height= 1080
 projector_divide_res = 12
-resolution=[projector_pix_width/projector_divide_res,projector_pix_height/projector_divide_res]
+resolution=[int(projector_pix_width/projector_divide_res),int(projector_pix_height/projector_divide_res)]
 pattern = cv2.structured_light.GrayCodePattern.create(width=resolution[0], height=resolution[1])
 
 Xc_a, Yc_a, Xp_a, Yp_a, Xc_b, Yc_b, Xp_b, Yp_b = decodeGraycode(captured_images[0], captured_images[1], white_and_black_images[0][0], white_and_black_images[1][0], 
-                           projector_divide_res, projector_pix_width, projector_pix_height, scan_directory. pattern)
+                           projector_divide_res, projector_pix_width, projector_pix_height, scan_directory, pattern)
 
 create_csv_file(Xc_a, Yc_a, Xp_a, Yp_a,Xc_a, Yc_a, Xp_a, Yp_a, Xc_b, Yc_b, Xp_b, Yp_b)
